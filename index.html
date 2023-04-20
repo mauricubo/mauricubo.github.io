@@ -14,21 +14,28 @@
     <title>Mauricio's Website</title>
 </head>
 
-<body>
+<body class="d-flex flex-column min-vh-100">
     <div class="container">
-        <nav class="navbar">
+        <nav class="navbar navbar-expand-lg">
             <div class="container-fluid">
                 <a class="navbar-brand" href="/">
                     <span id="author">Mauricio A.</span>
                 </a>
-                <ul class="nav justify-content-end">
-                    <li class="nav-item">
-                        <a class="nav-link link-dark" aria-current="page" href="/">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link link-dark" href="https://blog.mauricubo.com/">Blog</a>
-                    </li>
-                </ul>
+                <!-- Hamburger menu for mobile -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ms-auto justify-content-end">
+                        <li class="nav-item">
+                            <a class="nav-link link-dark" aria-current="page" href="/">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link link-dark" href="https://blog.mauricubo.com/" target="_blank" rel="noopener noreferrer">Blog</a>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </nav>
     </div>
@@ -49,7 +56,7 @@
             </div>
         </div>
         <div class="row d-flex justify-content-center icons">
-            <div class="col-3 text-center">
+            <div class="col-xs-6 col-sm-3 text-center">
                 <a href="https://www.linkedin.com/in/mauricioalpuin/" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-linkedin"></i></a>
                 <a href="https://twitter.com/mauricubo" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-twitter"></i></a>
                 <a href="https://stackoverflow.com/users/10979237/mauricubo" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-stack-overflow"></i></a>
@@ -58,7 +65,7 @@
             </div>
         </div>
     </div>
-    <footer class="border-top">
+    <footer class="mt-auto border-top">
         <p class="text-center text-muted">© 2023 Mauricio Alpuin | Powered by Me!</p>
     </footer>
     <script src="https://kit.fontawesome.com/66a2f8ed58.js" crossorigin="anonymous"></script>
