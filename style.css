@@ -10,7 +10,6 @@ body {
 }
 
 #author {
-    /* font-family: 'Monaco', Helvetica, sans-serif; */
     font-weight: bold;
     font-size: x-large;
 }
@@ -50,6 +49,7 @@ body {
 
 .icons {
     margin-top: 3em !important;
+    margin-bottom: 2em !important;
 }
 
 .icons a {
@@ -59,8 +59,6 @@ body {
 }
 
 footer {
-    position: absolute;
-    bottom: 0;  
     width: 100%;
 }
 
