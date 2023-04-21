@@ -65,3 +65,16 @@ footer {
 footer p {
     margin: 2em 0 1em 0;
 }
+
+/* ABOUT ME */
+.title {
+    margin-top: 1em;
+}
+
+.about-description {
+    margin-top: 2em !important ;
+}
+
+.mate {
+    margin-bottom: 1em;
+}
