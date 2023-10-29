@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>heimdall on I&#39;m Mauricio Alpuin</title>
+    <link>https://mauricubo.com/categories/heimdall/</link>
+    <description>Recent content in heimdall on I&#39;m Mauricio Alpuin</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 24 Oct 2022 00:03:42 +0000</lastBuildDate><atom:link href="https://mauricubo.com/categories/heimdall/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>My Home Server</title>
+      <link>https://mauricubo.com/posts/my-home-server/</link>
+      <pubDate>Mon, 24 Oct 2022 00:03:42 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/posts/my-home-server/</guid>
+      <description>I finally decided to buy a mini pc to start playing with some basics things that we don&amp;rsquo;t really need but that are really helpful when you are surfing the web from home. The main reason for doing that was because I&amp;rsquo;m thinking to move my personal blog to my own hosting, MY HOME SERVER.
+Technology/Software that I have used:
+Mini Pc Ubuntu Server 22.04 Microk8s Metallb Heimdall Application Dashboard Here is a diagram of how my home server network and components are working right now.</description>
+    </item>
+    
+  </channel>
+</rss>

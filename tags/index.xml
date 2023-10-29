@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on I&#39;m Mauricio Alpuin</title>
+    <link>https://mauricubo.com/tags/</link>
+    <description>Recent content in Tags on I&#39;m Mauricio Alpuin</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 20 Feb 2023 15:16:46 +0000</lastBuildDate><atom:link href="https://mauricubo.com/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>docker</title>
+      <link>https://mauricubo.com/tags/docker/</link>
+      <pubDate>Mon, 20 Feb 2023 15:16:46 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/docker/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>flask</title>
+      <link>https://mauricubo.com/tags/flask/</link>
+      <pubDate>Mon, 20 Feb 2023 15:16:46 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/flask/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>kubernetes</title>
+      <link>https://mauricubo.com/tags/kubernetes/</link>
+      <pubDate>Mon, 20 Feb 2023 15:16:46 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/kubernetes/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>microk8s</title>
+      <link>https://mauricubo.com/tags/microk8s/</link>
+      <pubDate>Mon, 20 Feb 2023 15:16:46 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/microk8s/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>python</title>
+      <link>https://mauricubo.com/tags/python/</link>
+      <pubDate>Mon, 20 Feb 2023 15:16:46 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/python/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>api</title>
+      <link>https://mauricubo.com/tags/api/</link>
+      <pubDate>Mon, 20 Feb 2023 04:02:34 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/api/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>digitalocean</title>
+      <link>https://mauricubo.com/tags/digitalocean/</link>
+      <pubDate>Mon, 20 Feb 2023 04:02:34 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/digitalocean/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>webhook</title>
+      <link>https://mauricubo.com/tags/webhook/</link>
+      <pubDate>Mon, 20 Feb 2023 04:02:34 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/webhook/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>whatsapp</title>
+      <link>https://mauricubo.com/tags/whatsapp/</link>
+      <pubDate>Mon, 20 Feb 2023 04:02:34 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/whatsapp/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>docker-compose</title>
+      <link>https://mauricubo.com/tags/docker-compose/</link>
+      <pubDate>Fri, 10 Feb 2023 13:58:00 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/docker-compose/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>monitoring</title>
+      <link>https://mauricubo.com/tags/monitoring/</link>
+      <pubDate>Wed, 23 Nov 2022 13:21:25 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/monitoring/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>netdata</title>
+      <link>https://mauricubo.com/tags/netdata/</link>
+      <pubDate>Wed, 23 Nov 2022 13:21:25 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/netdata/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>metallb</title>
+      <link>https://mauricubo.com/tags/metallb/</link>
+      <pubDate>Mon, 24 Oct 2022 03:55:59 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/metallb/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>pi-hole</title>
+      <link>https://mauricubo.com/tags/pi-hole/</link>
+      <pubDate>Mon, 24 Oct 2022 03:55:59 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/pi-hole/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>pihole</title>
+      <link>https://mauricubo.com/tags/pihole/</link>
+      <pubDate>Mon, 24 Oct 2022 03:55:59 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/pihole/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>ubuntu</title>
+      <link>https://mauricubo.com/tags/ubuntu/</link>
+      <pubDate>Mon, 24 Oct 2022 03:55:59 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/ubuntu/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>heimdall</title>
+      <link>https://mauricubo.com/tags/heimdall/</link>
+      <pubDate>Mon, 24 Oct 2022 00:03:42 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/heimdall/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>do</title>
+      <link>https://mauricubo.com/tags/do/</link>
+      <pubDate>Wed, 19 Oct 2022 18:21:33 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/do/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>flannel</title>
+      <link>https://mauricubo.com/tags/flannel/</link>
+      <pubDate>Wed, 19 Oct 2022 18:21:33 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/flannel/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>terraform</title>
+      <link>https://mauricubo.com/tags/terraform/</link>
+      <pubDate>Wed, 19 Oct 2022 18:21:33 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/terraform/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>ghost</title>
+      <link>https://mauricubo.com/tags/ghost/</link>
+      <pubDate>Mon, 19 Sep 2022 15:36:25 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/ghost/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>letsencrypt</title>
+      <link>https://mauricubo.com/tags/letsencrypt/</link>
+      <pubDate>Mon, 19 Sep 2022 15:36:25 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/tags/letsencrypt/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

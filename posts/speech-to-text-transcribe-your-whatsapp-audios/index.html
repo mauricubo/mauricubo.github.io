@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <title>Speech to Text - Transcribe your WhatsApp audios | I&#39;m Mauricio Alpuin</title>
+
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
+<meta name="viewport" content="width=device-width,minimum-scale=1">
+<meta name="description" content="The other day I was playing with the openai library that transcribes and translates audios, this library is call whisper and there is a package for python.
+But I really wanted to use it for something else. Almost every day, I receive Whatsapp audios when I am in the middle of a meeting. So I decided to write some code to integrate the transcriber library into the Whatsapp API. And this is the Speech to Text Bot.">
+<meta name="generator" content="Hugo 0.118.2">
+
+
+  <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link rel="shortcut icon" href="/images/favico.icon.png" type="image/x-icon" />
+
+
+
+
+
+
+
+
+  </head>
+
+  <body>
+    <nav class="navigation">
+	
+		<a href="/"> <span class="arrow">←</span>Home</a>
+	
+	<a href="/posts">Archive</a>
+	<a href="/tags">Tags</a>
+	<a href="/about">About</a>
+
+	
+
+	
+</nav>
+
+
+    <main class="main">
+      
+
+<section id="single">
+    <h1 class="title">Speech to Text - Transcribe your WhatsApp audios</h1>
+
+    <div class="tip">
+        <time datetime="2023-02-20 04:02:34 &#43;0000 UTC">Feb 20, 2023</time>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          1086 words
+        </span>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          6 minute read
+        </span>
+    </div>
+
+    
+    
+
+
+    <div class="content">
+      <p>The other day I was playing with the <code>openai</code> library that transcribes and translates audios, this library is call <code>whisper</code> and there is a package for <code>python</code>.</p>
+<p>But I really wanted to use it for something else. Almost every day, I receive Whatsapp audios when I am in the middle of a meeting. So I decided to write some code to integrate the transcriber library into the Whatsapp API. And this is the <code>Speech to Text Bot</code>.
+<p class="markdown-image">
+  <img src="/images/post8/whatsapp_audio.gif" alt=""  />
+</p></p>
+<blockquote>
+<p>⚠️ <strong>Note:</strong> The name of the bot is <code>Speech To Text</code> instead of <code>Speach</code></p>
+</blockquote>
+<hr>
+<h2 id="whisper">Whisper <a href="#whisper" class="anchor">🔗</a></h2><p><a href="https://openai.com/blog/whisper/" target="_blank" rel="noopener">Introducing Whisper</a></p>
+<p>It is an <code>OpenAI</code> open source project for speech recognition that we can easily be used with just installing the necessary packages. For example&hellip;</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ pip install openai-whisper --no-cache-dir
+</span></span></code></pre></div><p>And this is the class that I&rsquo;ve created for my project&hellip;</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">import</span> <span style="color:#00f;font-weight:bold">whisper</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">class</span> <span style="color:#00f">Transcriber</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#a2f;font-weight:bold">def</span> __init__(self, model):
+</span></span><span style="display:flex;"><span>        self<span style="color:#666">.</span>model <span style="color:#666">=</span> whisper<span style="color:#666">.</span>load_model(model)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#b44">        convert speech to text and return two variables
+</span></span></span><span style="display:flex;"><span><span style="color:#b44">        - language: eg &#34;en&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#b44">        - text: eg &#34;Good morning, this is a whatsapp audio&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#b44">    &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a2f;font-weight:bold">def</span> <span style="color:#00a000">transcribe</span>(self, audio):
+</span></span><span style="display:flex;"><span>        <span style="color:#a2f;font-weight:bold">try</span>:
+</span></span><span style="display:flex;"><span>            result <span style="color:#666">=</span> self<span style="color:#666">.</span>model<span style="color:#666">.</span>transcribe(audio, fp16<span style="color:#666">=</span><span style="color:#a2f;font-weight:bold">False</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#a2f;font-weight:bold">return</span> result[<span style="color:#b44">&#34;language&#34;</span>], result[<span style="color:#b44">&#34;text&#34;</span>]
+</span></span><span style="display:flex;"><span>        <span style="color:#a2f;font-weight:bold">except</span> <span style="color:#d2413a;font-weight:bold">Exception</span> <span style="color:#a2f;font-weight:bold">as</span> e:
+</span></span><span style="display:flex;"><span>            <span style="color:#a2f">print</span>(e)
+</span></span><span style="display:flex;"><span>        <span style="color:#a2f;font-weight:bold">return</span> <span style="color:#a2f;font-weight:bold">None</span>, <span style="color:#a2f;font-weight:bold">None</span>
+</span></span></code></pre></div><p>And it work like this&hellip;</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>&gt;&gt;&gt; from transcriber import Transcriber 
+</span></span><span style="display:flex;"><span>&gt;&gt;&gt; <span style="color:#b8860b">tr</span> <span style="color:#666">=</span> Transcriber<span style="color:#666">(</span><span style="color:#b44">&#34;base&#34;</span><span style="color:#666">)</span> 
+</span></span><span style="display:flex;"><span>&gt;&gt;&gt; ln, <span style="color:#b8860b">text</span> <span style="color:#666">=</span> tr.transcribe<span style="color:#666">(</span><span style="color:#b44">&#39;audios/5924194797660175.ogg&#39;</span><span style="color:#666">)</span> 
+</span></span><span style="display:flex;"><span>&gt;&gt;&gt; print<span style="color:#666">(</span>f<span style="color:#b44">&#34;language: {ln} - msg: {text}&#34;</span><span style="color:#666">)</span> 
+</span></span><span style="display:flex;"><span>language: es - msg:  Oye tío, si estáis libres te aviso de que alas como...
+</span></span></code></pre></div><hr>
+<h2 id="whatsapp-cloud-api">WhatsApp Cloud API <a href="#whatsapp-cloud-api" class="anchor">🔗</a></h2><p>This part was quite tricky to integrate, but once that I understood the documentation, it was more natural to develop.</p>
+<ul>
+<li>The first thing is to register as developer in <code>Meta</code></li>
+<li>Enable the two factor authentication.</li>
+<li>Create an App in the <code>Meta</code> portal as &ldquo;Business&rdquo; type</li>
+<li>Link your App to WhatsApp</li>
+</ul>
+<p><a href="https://developers.facebook.com/docs/whatsapp/cloud-api/get-started" target="_blank" rel="noopener">Get Started - Cloud API - Documentation - Meta for Developers</a></p>
+<p>Once that we have created our app in the <code>Meta</code> portal, we now can get the API Key, the phone number to send and receive messages and finally connect our Python App.</p>
+<p>Let&rsquo;s see an example of how to send a message to a number using the API.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">import</span> <span style="color:#00f;font-weight:bold">os</span>
+</span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">import</span> <span style="color:#00f;font-weight:bold">requests</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>WP_WEB_URL <span style="color:#666">=</span> <span style="color:#b44">&#34;https://graph.facebook.com/v15.0/&#34;</span>
+</span></span><span style="display:flex;"><span>WP_NUMBER <span style="color:#666">=</span> os<span style="color:#666">.</span>getenv(<span style="color:#b44">&#34;WP_NUMBER&#34;</span>)
+</span></span><span style="display:flex;"><span>ACCESS_TOKEN <span style="color:#666">=</span> os<span style="color:#666">.</span>getenv(<span style="color:#b44">&#34;ACCESS_TOKEN&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>simple_text <span style="color:#666">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">&#34;messaging_product&#34;</span>: <span style="color:#b44">&#34;whatsapp&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">&#34;recipient_type&#34;</span>: <span style="color:#b44">&#34;individual&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">&#34;to&#34;</span>: <span style="color:#b44">&#34;DEST_PHONE_NUMBER&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">&#34;type&#34;</span>: <span style="color:#b44">&#34;text&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">&#34;text&#34;</span>: {
+</span></span><span style="display:flex;"><span>        <span style="color:#b44">&#34;preview_url&#34;</span>: <span style="color:#a2f;font-weight:bold">True</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#b44">&#34;body&#34;</span>: <span style="color:#b44">&#34;MESSAGE_CONTENT&#34;</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">class</span> <span style="color:#00f">WhatsAppApi</span>:
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#b44">    Send a simple text message to a contact
+</span></span></span><span style="display:flex;"><span><span style="color:#b44">    &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a2f;font-weight:bold">def</span> <span style="color:#00a000">send_message</span>(self, message, dest_number):
+</span></span><span style="display:flex;"><span>        url <span style="color:#666">=</span> <span style="color:#b44">f</span><span style="color:#b44">&#34;</span><span style="color:#b68;font-weight:bold">{</span>WP_WEB_URL<span style="color:#b68;font-weight:bold">}{</span>WP_NUMBER<span style="color:#b68;font-weight:bold">}</span><span style="color:#b44">/messages&#34;</span>
+</span></span><span style="display:flex;"><span>        headers <span style="color:#666">=</span> {}
+</span></span><span style="display:flex;"><span>        headers[<span style="color:#b44">&#39;Authorization&#39;</span>] <span style="color:#666">=</span> <span style="color:#b44">f</span><span style="color:#b44">&#39;Bearer </span><span style="color:#b68;font-weight:bold">{</span>ACCESS_TOKEN<span style="color:#b68;font-weight:bold">}</span><span style="color:#b44">&#39;</span>
+</span></span><span style="display:flex;"><span>        msg <span style="color:#666">=</span> simple_text
+</span></span><span style="display:flex;"><span>        msg[<span style="color:#b44">&#39;to&#39;</span>] <span style="color:#666">=</span> dest_number
+</span></span><span style="display:flex;"><span>        msg[<span style="color:#b44">&#39;text&#39;</span>][<span style="color:#b44">&#39;body&#39;</span>] <span style="color:#666">=</span> message
+</span></span><span style="display:flex;"><span>        <span style="color:#a2f;font-weight:bold">try</span>:
+</span></span><span style="display:flex;"><span>            response <span style="color:#666">=</span> requests<span style="color:#666">.</span>post(
+</span></span><span style="display:flex;"><span>                url, json<span style="color:#666">=</span>msg, headers<span style="color:#666">=</span>headers
+</span></span><span style="display:flex;"><span>            )
+</span></span><span style="display:flex;"><span>            <span style="color:#a2f">print</span>(response<span style="color:#666">.</span>status_code)
+</span></span><span style="display:flex;"><span>            <span style="color:#a2f">print</span>(response<span style="color:#666">.</span>text)
+</span></span><span style="display:flex;"><span>        <span style="color:#a2f;font-weight:bold">except</span> <span style="color:#d2413a;font-weight:bold">Exception</span> <span style="color:#a2f;font-weight:bold">as</span> e:
+</span></span><span style="display:flex;"><span>            <span style="color:#a2f">print</span>(e)
+</span></span></code></pre></div><p>And we try the API&hellip;</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>&gt;&gt;&gt; from whatsapp import WhatsAppApi
+</span></span><span style="display:flex;"><span>&gt;&gt;&gt; <span style="color:#b8860b">wp</span> <span style="color:#666">=</span> WhatsAppApi<span style="color:#666">()</span> 
+</span></span><span style="display:flex;"><span>&gt;&gt;&gt; wp.send_message<span style="color:#666">(</span><span style="color:#b44">&#34;Hello Mauri!&#34;</span>, <span style="color:#b44">&#34;&lt;your_phone_number&gt;&#34;</span><span style="color:#666">)</span> 
+</span></span><span style="display:flex;"><span><span style="color:#666">200</span> 
+</span></span><span style="display:flex;"><span><span style="color:#666">{</span><span style="color:#b44">&#34;messaging_product&#34;</span>:<span style="color:#b44">&#34;whatsapp&#34;</span> ...<span style="color:#666">}</span>
+</span></span></code></pre></div><blockquote>
+<p>📱 <strong>Note:</strong> You need to register your telephone number on the meta portal and send a message to the assigned whatsapp number before you can send a message using the API.</p>
+</blockquote>
+<hr>
+<h2 id="whatsapp-cloud-api---webhook">WhatsApp Cloud API - Webhook <a href="#whatsapp-cloud-api---webhook" class="anchor">🔗</a></h2><p>In order to integrate our <code>speach to text</code> function with the <code>Whatsapp Cloud API</code>, we need to create the webhook that allow us to receive the messages that we send to our api Whatsapp number.</p>
+<p>This is a simple diagram‌ of the solution&hellip;
+<p class="markdown-image">
+  <img src="/images/post8/whatsapp-webhook.jpeg" alt=""  />
+</p></p>
+<h2 id="webhook-registration">Webhook Registration <a href="#webhook-registration" class="anchor">🔗</a></h2><p>The first thing that we need to do is register our webhook on the <code>whatsapp</code> application that we have created on the meta portal. And our webhook needs to validate a token that we have to generate to return the <code>hub.challenge</code> parameter value that the API sent on the <code>GET</code> request.</p>
+<p>This is an example of the configuration and code that we need to implement for that function&hellip;</p>
+<p><p class="markdown-image">
+  <img src="/images/post8/webhook-meta.png" alt=""  />
+</p></p>
+<p>And we subscribe to the webhook field of messages. Then our Flask API endpoint should look like&hellip;</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#a2f">@app.route</span>(<span style="color:#b44">&#39;/webhook&#39;</span>, methods<span style="color:#666">=</span>[<span style="color:#b44">&#39;POST&#39;</span>, <span style="color:#b44">&#39;GET&#39;</span>])
+</span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">def</span> <span style="color:#00a000">webhook</span>():
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#b44">    POST: all related to the messages that were sent
+</span></span></span><span style="display:flex;"><span><span style="color:#b44">    &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a2f;font-weight:bold">if</span> request<span style="color:#666">.</span>method <span style="color:#666">==</span> <span style="color:#b44">&#39;POST&#39;</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#a2f;font-weight:bold">pass</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#080;font-style:italic"># Get method on webhook is for registration propouse</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a2f;font-weight:bold">elif</span> request<span style="color:#666">.</span>method <span style="color:#666">==</span> <span style="color:#b44">&#39;GET&#39;</span> <span style="color:#a2f;font-weight:bold">and</span> \
+</span></span><span style="display:flex;"><span>        request<span style="color:#666">.</span>args<span style="color:#666">.</span>get(<span style="color:#b44">&#39;hub.mode&#39;</span>) <span style="color:#666">==</span> <span style="color:#b44">&#34;subscribe&#34;</span> <span style="color:#a2f;font-weight:bold">and</span> \
+</span></span><span style="display:flex;"><span>        request<span style="color:#666">.</span>args<span style="color:#666">.</span>get(<span style="color:#b44">&#39;hub.verify_token&#39;</span>) <span style="color:#a2f;font-weight:bold">and</span> \
+</span></span><span style="display:flex;"><span>        request<span style="color:#666">.</span>args<span style="color:#666">.</span>get(<span style="color:#b44">&#39;hub.verify_token&#39;</span>) <span style="color:#666">==</span> WEBHOOK_TOKEN :
+</span></span><span style="display:flex;"><span>            <span style="color:#a2f;font-weight:bold">return</span> request<span style="color:#666">.</span>args<span style="color:#666">.</span>get(<span style="color:#b44">&#39;hub.challenge&#39;</span>), <span style="color:#666">200</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a2f;font-weight:bold">return</span> {<span style="color:#b44">&#39;message&#39;</span>: <span style="color:#b44">&#39;Registration failed&#39;</span>}, <span style="color:#666">403</span>
+</span></span></code></pre></div><h3 id="speech-to-text">Speech to Text <a href="#speech-to-text" class="anchor">🔗</a></h3><p>We need to implement the core of our transcribe function, it&rsquo;s the part when we download the audio file that the user sent to our bot number and then processes the audio which is sent back as text to the user.</p>
+<p>The official documentation shows us the format of the json file that we recive when the API posts a multimedia file on our webhook. In this case, we are going to process only the multimedia files with type equals to <code>audio</code>.</p>
+<p><a href="https://developers.facebook.com/docs/whatsapp/cloud-api/webhooks/payload-examples#mensajes-multimedia" target="_blank" rel="noopener">Webhook Notification Payload Examples for the WhatsApp Business Cloud API</a></p>
+<p>Example of that implementation&hellip;</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#080;font-style:italic"># main.py file</span>
+</span></span><span style="display:flex;"><span><span style="color:#080;font-style:italic"># more content here</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">def</span> <span style="color:#00a000">process_messages</span>(messages):
+</span></span><span style="display:flex;"><span>    audios <span style="color:#666">=</span> []
+</span></span><span style="display:flex;"><span>    <span style="color:#a2f;font-weight:bold">for</span> msg <span style="color:#a2f;font-weight:bold">in</span> messages:
+</span></span><span style="display:flex;"><span>        <span style="color:#a2f;font-weight:bold">if</span> msg<span style="color:#666">.</span>get(<span style="color:#b44">&#34;type&#34;</span>) <span style="color:#666">==</span> <span style="color:#b44">&#34;audio&#34;</span>:
+</span></span><span style="display:flex;"><span>            audios<span style="color:#666">.</span>append(msg<span style="color:#666">.</span>get(<span style="color:#b44">&#34;audio&#34;</span>)<span style="color:#666">.</span>get(<span style="color:#b44">&#34;id&#34;</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#a2f;font-weight:bold">return</span> audios
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">def</span> <span style="color:#00a000">send_transcribed_msgs</span>(audios_id, to):
+</span></span><span style="display:flex;"><span>    <span style="color:#a2f;font-weight:bold">for</span> a_id <span style="color:#a2f;font-weight:bold">in</span> audios_id:
+</span></span><span style="display:flex;"><span>        path <span style="color:#666">=</span> wp<span style="color:#666">.</span>download_audio(a_id)
+</span></span><span style="display:flex;"><span>        lg, text <span style="color:#666">=</span> tr<span style="color:#666">.</span>transcribe(path)
+</span></span><span style="display:flex;"><span>        wp<span style="color:#666">.</span>send_message(<span style="color:#b44">f</span><span style="color:#b44">&#39;language: </span><span style="color:#b68;font-weight:bold">{</span>lg<span style="color:#b68;font-weight:bold">}</span><span style="color:#b44"> - msg: </span><span style="color:#b68;font-weight:bold">{</span>text<span style="color:#b68;font-weight:bold">}</span><span style="color:#b44">&#39;</span>,
+</span></span><span style="display:flex;"><span>            to)    
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#b44">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#b44">doc: https://developers.facebook.com/docs/whatsapp/cloud-api/webhooks/payload-examples
+</span></span></span><span style="display:flex;"><span><span style="color:#b44">get the audios in the messages
+</span></span></span><span style="display:flex;"><span><span style="color:#b44">1- obtain the ID of the audio
+</span></span></span><span style="display:flex;"><span><span style="color:#b44">entry[] -&gt; changes[] -&gt; value -&gt; messages[] -&gt; audio -&gt; id
+</span></span></span><span style="display:flex;"><span><span style="color:#b44">2- download the audio and process it
+</span></span></span><span style="display:flex;"><span><span style="color:#b44">3- send the transcription to the number
+</span></span></span><span style="display:flex;"><span><span style="color:#b44">&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#a2f">@app.route</span>(<span style="color:#b44">&#39;/webhook&#39;</span>, methods<span style="color:#666">=</span>[<span style="color:#b44">&#39;POST&#39;</span>, <span style="color:#b44">&#39;GET&#39;</span>])
+</span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">def</span> <span style="color:#00a000">webhook</span>():
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#b44">    POST: all related to the messages that were sent
+</span></span></span><span style="display:flex;"><span><span style="color:#b44">    &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a2f;font-weight:bold">if</span> request<span style="color:#666">.</span>method <span style="color:#666">==</span> <span style="color:#b44">&#39;POST&#39;</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#a2f;font-weight:bold">try</span>:
+</span></span><span style="display:flex;"><span>            audios_id <span style="color:#666">=</span> []
+</span></span><span style="display:flex;"><span>            entries <span style="color:#666">=</span> request<span style="color:#666">.</span>json<span style="color:#666">.</span>get(<span style="color:#b44">&#34;entry&#34;</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#a2f;font-weight:bold">for</span> entry <span style="color:#a2f;font-weight:bold">in</span> entries:
+</span></span><span style="display:flex;"><span>                changes <span style="color:#666">=</span> entry<span style="color:#666">.</span>get(<span style="color:#b44">&#34;changes&#34;</span>)
+</span></span><span style="display:flex;"><span>                <span style="color:#a2f;font-weight:bold">for</span> change <span style="color:#a2f;font-weight:bold">in</span> changes:
+</span></span><span style="display:flex;"><span>                    value <span style="color:#666">=</span> change<span style="color:#666">.</span>get(<span style="color:#b44">&#34;value&#34;</span>)
+</span></span><span style="display:flex;"><span>                    messages <span style="color:#666">=</span> value<span style="color:#666">.</span>get(<span style="color:#b44">&#34;messages&#34;</span>)
+</span></span><span style="display:flex;"><span>                    <span style="color:#080;font-style:italic"># get the sender number</span>
+</span></span><span style="display:flex;"><span>                    from_num <span style="color:#666">=</span> messages[<span style="color:#666">0</span>][<span style="color:#b44">&#34;from&#34;</span>]
+</span></span><span style="display:flex;"><span>                    <span style="color:#080;font-style:italic"># proceess the messages = download  + transcribe</span>
+</span></span><span style="display:flex;"><span>                    audios_id <span style="color:#666">=</span> process_messages(messages)
+</span></span><span style="display:flex;"><span>                    <span style="color:#080;font-style:italic"># send the text to the user</span>
+</span></span><span style="display:flex;"><span>                    send_transcribed_msgs(audios_id, from_num)
+</span></span><span style="display:flex;"><span>        <span style="color:#a2f;font-weight:bold">except</span> <span style="color:#d2413a;font-weight:bold">Exception</span> <span style="color:#a2f;font-weight:bold">as</span> e:
+</span></span><span style="display:flex;"><span>            <span style="color:#a2f">print</span>(e)
+</span></span><span style="display:flex;"><span>            <span style="color:#a2f;font-weight:bold">return</span> {<span style="color:#b44">&#34;msg&#34;</span>: <span style="color:#b44">&#34;Error processing msgs&#34;</span>}, <span style="color:#666">500</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#080;font-style:italic">### more code here</span>
+</span></span></code></pre></div><p>And that&rsquo;s all that we need to make this work. After this we can deploy this code on a public cloud or on a public domain and register the domain url to integrate it with the Whatsapp API.</p>
+<hr>
+<h2 id="things-that-i-need-to-improve">Things that I need to improve <a href="#things-that-i-need-to-improve" class="anchor">🔗</a></h2><ul>
+<li>The code is not for production environments. It&rsquo;s a developer version that works with no more that 5 numbers.</li>
+<li>Because we are downloading the <code>whisper</code> package, the <code>base</code> version of the package makes the installation really heavy (this limit the options of hosting the api in the cloud, and the building process if we want to integrate it with docker).</li>
+<li>Security - I have implemented more functions to the api but it needs security improvements.</li>
+</ul>
+<p>You can access to the source code here&hellip; and you are more than welcome to contribute.</p>
+<p><a href="https://github.com/mauricubo/python_scripts/tree/main/speech_to_text" target="_blank" rel="noopener">Python Scripts most of them are for crontab tasks - python_scripts/speech_to_text at main · mauricubo/python_scripts</a></p>
+
+    </div>
+
+    
+        <div class="tags">
+            
+                <a href="https://mauricubo.com/tags/whatsapp">whatsapp</a>
+            
+                <a href="https://mauricubo.com/tags/python">python</a>
+            
+                <a href="https://mauricubo.com/tags/flask">flask</a>
+            
+                <a href="https://mauricubo.com/tags/api">api</a>
+            
+                <a href="https://mauricubo.com/tags/webhook">webhook</a>
+            
+                <a href="https://mauricubo.com/tags/digitalocean">digitalocean</a>
+            
+        </div>
+    
+    
+    
+
+</section>
+
+
+    </main>
+    
+    <footer id="footer">
+    
+        <div id="social">
+
+
+    <a class="symbol" href="https://github.com/mauricubo/" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28"  viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>Github</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Social-Icons---Rounded-Black" transform="translate(-264.000000, -939.000000)">
+            <g id="Github" transform="translate(264.000000, 939.000000)">
+                <path d="M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z" id="Rounded" fill="#bbbbbb"></path>
+                <path d="M35.9985,13 C22.746,13 12,23.7870921 12,37.096644 C12,47.7406712 18.876,56.7718301 28.4145,59.9584121 C29.6145,60.1797862 30.0525,59.4358488 30.0525,58.7973276 C30.0525,58.2250681 30.0315,56.7100863 30.0195,54.6996482 C23.343,56.1558981 21.9345,51.4693938 21.9345,51.4693938 C20.844,48.6864054 19.2705,47.9454799 19.2705,47.9454799 C17.091,46.4500754 19.4355,46.4801943 19.4355,46.4801943 C21.843,46.6503662 23.1105,48.9634994 23.1105,48.9634994 C25.2525,52.6455377 28.728,51.5823398 30.096,50.9649018 C30.3135,49.4077535 30.9345,48.3460615 31.62,47.7436831 C26.2905,47.1352808 20.688,45.0691228 20.688,35.8361671 C20.688,33.2052792 21.6225,31.0547881 23.1585,29.3696344 C22.911,28.7597262 22.0875,26.3110578 23.3925,22.9934585 C23.3925,22.9934585 25.4085,22.3459017 29.9925,25.4632101 C31.908,24.9285993 33.96,24.6620468 36.0015,24.6515052 C38.04,24.6620468 40.0935,24.9285993 42.0105,25.4632101 C46.5915,22.3459017 48.603,22.9934585 48.603,22.9934585 C49.9125,26.3110578 49.089,28.7597262 48.8415,29.3696344 C50.3805,31.0547881 51.309,33.2052792 51.309,35.8361671 C51.309,45.0917119 45.6975,47.1292571 40.3515,47.7256117 C41.2125,48.4695491 41.9805,49.9393525 41.9805,52.1877301 C41.9805,55.4089489 41.9505,58.0067059 41.9505,58.7973276 C41.9505,59.4418726 42.3825,60.1918338 43.6005,59.9554002 C53.13,56.7627944 60,47.7376593 60,37.096644 C60,23.7870921 49.254,13 35.9985,13" fill="#FFFFFF"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    </a>
+
+    <a class="symbol" href="https://stackoverflow.com/users/10979237" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28" viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>stackoverflow</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Social-Icons---Rounded-Black" transform="translate(-488.000000, -1163.000000)">
+            <g id="stackoverflow" transform="translate(488.000000, 1163.000000)">
+                <path d="M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z" id="Rounded" fill="#bbbbbb"></path>
+                <path d="M42.0860128,53.5922927 L22.9745951,53.6011499 L22.9729497,49.5538824 L42.0835447,49.5440929 L42.0860128,53.5922927 L42.0860128,53.5922927 Z M55,30.6708298 L51.7306912,12 L47.7087256,12.6920259 L50.9775643,31.3628557 L55,30.6708298 L55,30.6708298 Z M42.5455518,44.3547147 L23.5156994,42.616026 L23.1410164,46.6470941 L42.1712214,48.3841513 L42.5455518,44.3547147 L42.5455518,44.3547147 Z M43.8009984,39.0731519 L25.3459811,34.1539179 L24.285633,38.0621508 L42.7419431,42.9819676 L43.8009984,39.0731519 L43.8009984,39.0731519 Z M46.2103463,34.4436411 L29.7494464,24.8164635 L27.6748215,28.3015328 L44.1365441,37.9292931 L46.2103463,34.4436411 L46.2103463,34.4436411 Z M50.2466504,31.6088756 L46.8745036,33.8883189 L36.106599,18.2318456 L39.4792159,15.9517031 L50.2466504,31.6088756 Z M45.3315807,40.2784283 L48.5799693,40.2784283 L48.5799693,60 L17,60 L17,40.2784283 L20.2648427,40.2784283 L20.2648427,56.8243495 L45.3315807,56.8243495 L45.3315807,40.2784283 Z" fill="#FFFFFF"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    </a>
+
+    <a class="symbol" href="https://twitter.com/mauricubo" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="438.536px" height="438.536px" viewBox="0 0 438.536 438.536" style="enable-background:new 0 0 438.536 438.536;"
+	 xml:space="preserve">
+<g>
+	<path d="M414.41,24.123C398.333,8.042,378.963,0,356.315,0H82.228C59.58,0,40.21,8.042,24.126,24.123
+		C8.045,40.207,0.003,59.576,0.003,82.225v274.084c0,22.647,8.042,42.018,24.123,58.102c16.084,16.084,35.454,24.126,58.102,24.126
+		h274.084c22.648,0,42.018-8.042,58.095-24.126c16.084-16.084,24.126-35.454,24.126-58.102V82.225
+		C438.532,59.576,430.49,40.204,414.41,24.123z M335.471,168.735c0.191,1.713,0.288,4.278,0.288,7.71
+		c0,15.989-2.334,32.025-6.995,48.104c-4.661,16.087-11.8,31.504-21.416,46.254c-9.606,14.749-21.074,27.791-34.396,39.115
+		c-13.325,11.32-29.311,20.365-47.968,27.117c-18.648,6.762-38.637,10.143-59.953,10.143c-33.116,0-63.76-8.952-91.931-26.836
+		c4.568,0.568,9.329,0.855,14.275,0.855c27.6,0,52.439-8.565,74.519-25.7c-12.941-0.185-24.506-4.179-34.688-11.991
+		c-10.185-7.803-17.273-17.699-21.271-29.691c4.947,0.76,8.658,1.137,11.132,1.137c4.187,0,9.042-0.76,14.56-2.279
+		c-13.894-2.669-25.598-9.562-35.115-20.697c-9.519-11.136-14.277-23.84-14.277-38.114v-0.571
+		c10.085,4.755,19.602,7.229,28.549,7.422c-17.321-11.613-25.981-28.265-25.981-49.963c0-10.66,2.758-20.747,8.278-30.264
+		c15.035,18.464,33.311,33.213,54.816,44.252c21.507,11.038,44.54,17.227,69.092,18.558c-0.95-3.616-1.427-8.186-1.427-13.704
+		c0-16.562,5.853-30.692,17.56-42.399c11.703-11.706,25.837-17.561,42.394-17.561c17.515,0,32.079,6.283,43.688,18.846
+		c13.134-2.474,25.892-7.33,38.26-14.56c-4.757,14.652-13.613,25.788-26.55,33.402c12.368-1.716,23.88-4.95,34.537-9.708
+		C357.458,149.793,347.462,160.166,335.471,168.735z"/>
+</g>
+</svg>
+
+    </a>
+
+
+</div>
+
+    
+
+    <div class="copyright">
+    
+       © Copyright 
+       2023 
+       <span class="split">
+        <svg fill="#bbbbbb" width="15" height="15" version="1.1" id="heart-15" xmlns="http://www.w3.org/2000/svg" width="15px" height="15px" viewBox="0 0 15 15">
+  <path d="M13.91,6.75c-1.17,2.25-4.3,5.31-6.07,6.94c-0.1903,0.1718-0.4797,0.1718-0.67,0C5.39,12.06,2.26,9,1.09,6.75&#xA;&#x9;C-1.48,1.8,5-1.5,7.5,3.45C10-1.5,16.48,1.8,13.91,6.75z"/>
+</svg>
+       </span>
+       Mauricio Alpuin
+    
+    </div>
+
+    
+      <div class="powerby">
+        Powered by <a href='http://www.gohugo.io/'>Hugo</a> Theme By <a href='https://github.com/nodejh/hugo-theme-mini'>nodejh</a>
+      </div>
+    
+</footer>
+
+
+
+  </body>
+</html>

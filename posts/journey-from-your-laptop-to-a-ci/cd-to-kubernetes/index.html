@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <title>Journey from your laptop to a CI/CD to Kubernetes | I&#39;m Mauricio Alpuin</title>
+
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
+<meta name="viewport" content="width=device-width,minimum-scale=1">
+<meta name="description" content="In today&rsquo;s post I want to write something that came to my mind when I was trying to write code. In particular I was trying to remember how to write code again, so I started to write some kind of API with Flask.
+Many people love Flask for its simplicity and I wanted to give it a try to see how easy it was to create a functional API from scratch.">
+<meta name="generator" content="Hugo 0.118.2">
+
+
+  <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link rel="shortcut icon" href="/images/favico.icon.png" type="image/x-icon" />
+
+
+
+
+
+
+
+
+  </head>
+
+  <body>
+    <nav class="navigation">
+	
+		<a href="/"> <span class="arrow">←</span>Home</a>
+	
+	<a href="/posts">Archive</a>
+	<a href="/tags">Tags</a>
+	<a href="/about">About</a>
+
+	
+
+	
+</nav>
+
+
+    <main class="main">
+      
+
+<section id="single">
+    <h1 class="title">Journey from your laptop to a CI/CD to Kubernetes</h1>
+
+    <div class="tip">
+        <time datetime="2023-02-10 13:58:00 &#43;0000 UTC">Feb 10, 2023</time>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          1590 words
+        </span>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          8 minute read
+        </span>
+    </div>
+
+    
+    
+
+
+    <div class="content">
+      <p>In today&rsquo;s post I want to write something that came to my mind when I was trying to write code. In particular I was trying to remember how to write code again, so I started to write some kind of API with Flask.</p>
+<p>Many people love Flask for its simplicity and I wanted to give it a try to see how easy it was to create a functional API from scratch. I&rsquo;m going to talk about my experience later, but what I would like to remark now, was my instant desire to automate the deployment process. I didn&rsquo;t start to code and I was thinking to create a CI/CD pipeline to automate the whole DevSecOps process that is part of our daily basis as DevOps fans.</p>
+<p>So, I started to think how the process was going to be, from starting with my code on my local computer running with the development tools that comes by default on our environment, to deploying the app to a Kubernetes cluster through a pipeline that controls all the software&rsquo;s lifecycle. For that reason I wrote the steps that I wanted to follow in order to respect the whole process and focus on what I was trying to do.</p>
+<ol>
+<li>Create a full stack application with base on Python+Flask as my backend and React as my frontend.</li>
+<li>Create the Dockerfiles and interconnect the projects</li>
+<li>Use docker-compose to orchestrate and link my project</li>
+<li>Deploy the app in a Kubernetes Cluster</li>
+<li>Standardize the deployment using Helm</li>
+<li>Create a pipeline
+<ul>
+<li>Build the docker images</li>
+<li>Deploy the images on kubernetes</li>
+<li>Add vulnerability scans and unit tests</li>
+<li>Connect with other platforms</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="the-url-shortener-app">The Url Shortener App <a href="#the-url-shortener-app" class="anchor">🔗</a></h2><p><p class="markdown-image">
+  <img src="/images/post7/out.gif" alt=""  />
+</p>
+The <code>Url Shortener Project</code> is an application that generates randoms and shorts urls and redirect the clients to the final site. It&rsquo;s exactly like the <code>google</code> url shortener or <code>bitly</code>. I just wanted to create an API Rest with <code>Flask</code> so that idea came to my mind.</p>
+<p>This is the UML Diagram to understand the model.
+<p class="markdown-image">
+  <img src="/images/post7/uml.png" alt=""  />
+</p>
+It&rsquo;s a user that can have as many urls as it wants. And my <code>apidocs</code> looks like this:
+<p class="markdown-image">
+  <img src="/images/post7/swagger.png" alt=""  />
+</p>
+Now I can do the following things:</p>
+<ol>
+<li>Register and authenticate users</li>
+<li>Get my user info details</li>
+<li>Create, read and delete items from my URL list</li>
+</ol>
+<hr>
+<p>From my perspective, create an API from scratch in Flask was a quite interesting experience, and when I say experience I&rsquo;m talking about you starting from scratch and finally creating a monster.</p>
+<p>I literally have started with this example:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">from</span> <span style="color:#00f;font-weight:bold">flask</span> <span style="color:#a2f;font-weight:bold">import</span> Flask
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>app <span style="color:#666">=</span> Flask(__name__)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a2f">@app.route</span>(<span style="color:#b44">&#34;/&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">def</span> <span style="color:#00a000">hello_world</span>():
+</span></span><span style="display:flex;"><span>    <span style="color:#a2f;font-weight:bold">return</span> <span style="color:#b44">&#34;Hello, World!&#34;</span>
+</span></span></code></pre></div><p>But now I have a complete new project, of which I needed to rethink the structure and which was growing to a more mature structure, but which could still be improved to be more organized.
+<p class="markdown-image">
+  <img src="/images/post7/project_structure.png" alt=""  />
+</p>
+I could see as well that many people love that facility and freedom to create their project and structure as the way that they want, but many others don&rsquo;t like that, and prefer other frameworks, like <code>django</code>. I could say that the structure that I have right now was growing in a natural way, kind of like I was guided to that structure during the process when I was implementing more functions to my project. If I have to describe what it looks like, I have to say that the structure now looks similar to django.</p>
+<hr>
+<h2 id="containers-and-configs">Containers and Configs <a href="#containers-and-configs" class="anchor">🔗</a></h2><p>But ok, I don&rsquo;t want to continue talking about coding, now I want to talk about how to pass from running the default development server to run the apps on <code>docker container</code>.</p>
+<p>A simple way to start with containers is to run the applications on a single instance of an image specially prepared for that propose.</p>
+<h2 id="flask-app---backend">Flask App - Backend <a href="#flask-app---backend" class="anchor">🔗</a></h2><div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>FROM python:<span style="color:#666">3.9.2</span><span style="color:#666">-</span>slim <span style="color:#a2f;font-weight:bold">as</span> flask
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>RUN pip install <span style="color:#666">--</span>upgrade pip
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>COPY <span style="color:#666">--</span>chown<span style="color:#666">=</span>www<span style="color:#666">-</span>data:www<span style="color:#666">-</span>data <span style="color:#666">.</span> <span style="color:#666">/</span>usr<span style="color:#666">/</span>app<span style="color:#666">/</span>url_shortener
+</span></span><span style="display:flex;"><span>RUN chown <span style="color:#666">-</span>R www<span style="color:#666">-</span>data:www<span style="color:#666">-</span>data <span style="color:#666">/</span>usr<span style="color:#666">/</span>app<span style="color:#666">/</span>url_shortener
+</span></span><span style="display:flex;"><span>WORKDIR <span style="color:#666">/</span>usr<span style="color:#666">/</span>app<span style="color:#666">/</span>url_shortener
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>RUN apt<span style="color:#666">-</span>get clean \
+</span></span><span style="display:flex;"><span>    <span style="color:#666">&amp;&amp;</span> apt<span style="color:#666">-</span>get <span style="color:#666">-</span>y update
+</span></span><span style="display:flex;"><span>RUN apt<span style="color:#666">-</span>get <span style="color:#666">-</span>y install nginx \
+</span></span><span style="display:flex;"><span>    <span style="color:#666">&amp;&amp;</span> apt<span style="color:#666">-</span>get <span style="color:#666">-</span>y install python3<span style="color:#666">-</span>dev \
+</span></span><span style="display:flex;"><span>    <span style="color:#666">&amp;&amp;</span> apt<span style="color:#666">-</span>get <span style="color:#666">-</span>y install build<span style="color:#666">-</span>essential \
+</span></span><span style="display:flex;"><span>    <span style="color:#666">&amp;&amp;</span> apt<span style="color:#666">-</span>get <span style="color:#666">-</span>y install libpq<span style="color:#666">-</span>dev
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>RUN pip install <span style="color:#666">-</span>r requirements<span style="color:#666">.</span>txt
+</span></span><span style="display:flex;"><span>RUN mv nginx<span style="color:#666">/</span>nginx<span style="color:#666">.</span>conf <span style="color:#666">/</span>etc<span style="color:#666">/</span>nginx
+</span></span><span style="display:flex;"><span>RUN chmod <span style="color:#666">+</span>x nginx<span style="color:#666">/</span>startup<span style="color:#666">.</span>sh
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>CMD [<span style="color:#b44">&#34;./nginx/startup.sh&#34;</span>]
+</span></span></code></pre></div><blockquote>
+<p>🐋 <strong>Note:</strong> I need to reduce the image size of the flask app.</p>
+</blockquote>
+<p>Because we are going to use uwsgi to run our app, we need to configure the server and expose it behind the nginx server. That&rsquo;s why we need the <code>uwsgi.ini</code>, the <code>nginx.conf</code> and the <code>startup.sh</code></p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-conf" data-lang="conf"><span style="display:flex;"><span><span style="">[</span><span style="color:#b8860b">uwsgi</span><span style="">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#b8860b">module</span> <span style="color:#666">=</span> <span style="color:#b8860b">main</span><span style="">:</span><span style="color:#b8860b">app</span>
+</span></span><span style="display:flex;"><span><span style="color:#b8860b">uid</span> <span style="color:#666">=</span> <span style="color:#b8860b">www-data</span>
+</span></span><span style="display:flex;"><span><span style="color:#b8860b">gid</span> <span style="color:#666">=</span> <span style="color:#b8860b">www-data</span>
+</span></span><span style="display:flex;"><span><span style="color:#b8860b">master</span> <span style="color:#666">=</span> <span style="color:#a2f;font-weight:bold">true</span>
+</span></span><span style="display:flex;"><span><span style="color:#b8860b">processes</span> <span style="color:#666">=</span> <span style="color:#b8860b">5</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#b8860b">socket</span> <span style="color:#666">=</span> <span style="">/</span><span style="color:#b8860b">tmp</span><span style="">/</span><span style="color:#b8860b">uwsgi.socket</span>
+</span></span><span style="display:flex;"><span><span style="color:#b8860b">chmod-sock</span> <span style="color:#666">=</span> <span style="color:#b8860b">664</span>
+</span></span><span style="display:flex;"><span><span style="color:#b8860b">vacuum</span> <span style="color:#666">=</span> <span style="color:#a2f;font-weight:bold">true</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#b8860b">die-on-term</span> <span style="color:#666">=</span> <span style="color:#a2f;font-weight:bold">true</span>
+</span></span></code></pre></div><p><code>uwsgi</code> does not expose the app as standard http protocol, that&rsquo;s why we need the <code>nginx</code> server.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-conf" data-lang="conf"><span style="display:flex;"><span><span style="color:#b8860b">user</span> <span style="color:#b8860b">www-data</span>;
+</span></span><span style="display:flex;"><span><span style="color:#b8860b">worker_processes</span> <span style="color:#b8860b">auto</span>;
+</span></span><span style="display:flex;"><span><span style="color:#b8860b">pid</span> <span style="">/</span><span style="color:#b8860b">run</span><span style="">/</span><span style="color:#b8860b">nginx.pid</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#b8860b">events</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#b8860b">worker_connections</span> <span style="color:#b8860b">1024</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#b8860b">use</span> <span style="color:#b8860b">epoll</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#b8860b">multi_accept</span> <span style="color:#a2f;font-weight:bold">on</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#b8860b">http</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#b8860b">access_log</span> <span style="">/</span><span style="color:#b8860b">dev</span><span style="">/</span><span style="color:#b8860b">stdout</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#b8860b">error_log</span> <span style="">/</span><span style="color:#b8860b">dev</span><span style="">/</span><span style="color:#b8860b">stdout</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#b8860b">sendfile</span>            <span style="color:#a2f;font-weight:bold">on</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#b8860b">tcp_nopush</span>          <span style="color:#a2f;font-weight:bold">on</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#b8860b">tcp_nodelay</span>         <span style="color:#a2f;font-weight:bold">on</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#b8860b">keepalive_timeout</span>   <span style="color:#b8860b">65</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#b8860b">types_hash_max_size</span> <span style="color:#b8860b">2048</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#0b0;font-weight:bold">include</span>             <span style="">/</span><span style="color:#b8860b">etc</span><span style="">/</span><span style="color:#b8860b">nginx</span><span style="">/</span><span style="color:#b8860b">mime.types</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#b8860b">default_type</span>        <span style="color:#b8860b">application</span><span style="">/</span><span style="color:#b8860b">octet-stream</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#b8860b">index</span>   <span style="color:#b8860b">index.html</span> <span style="color:#b8860b">index.htm</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#b8860b">server</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#b8860b">listen</span>       <span style="color:#b8860b">80</span> <span style="color:#b8860b">default_server</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#b8860b">listen</span>       <span style="">[::]:</span><span style="color:#b8860b">80</span> <span style="color:#b8860b">default_server</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#b8860b">server_name</span>  <span style="color:#b8860b">localhost</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#b8860b">root</span>         <span style="">/</span><span style="color:#b8860b">var</span><span style="">/</span><span style="color:#b8860b">www</span><span style="">/</span><span style="color:#b8860b">html</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#b8860b">location</span> <span style="">/</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#0b0;font-weight:bold">include</span> <span style="color:#b8860b">uwsgi_params</span>;
+</span></span><span style="display:flex;"><span>            <span style="color:#b8860b">uwsgi_pass</span> <span style="color:#b8860b">unix</span><span style="">:/</span><span style="color:#b8860b">tmp</span><span style="">/</span><span style="color:#b8860b">uwsgi.socket</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The start script to run nginx and the uwsgi service.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#080">#!/usr/bin/env bash
+</span></span></span><span style="display:flex;"><span><span style="color:#080"></span>service nginx start
+</span></span><span style="display:flex;"><span>uwsgi --ini uwsgi.ini
+</span></span></code></pre></div><p>Now we just build the image&hellip;</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ docker build --progress<span style="color:#666">=</span>plain --no-cache --platform linux/amd64 . --tag url_shortener_be:latest
+</span></span></code></pre></div><blockquote>
+<p>🤯 <strong>Note:</strong> <code>--progress=plain --no-cache</code> is to show and persist the progress in the terminal. <code>--platform linux/amd64</code> is a special parameter that I had to use to build a compatible image with my linux system when I used MacOS.</p>
+</blockquote>
+<p>And run it like this.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ docker run -it -p 8002:80 -e <span style="color:#b8860b">CONFIGURATION_SETUP</span><span style="color:#666">=</span><span style="color:#b44">&#34;config.DevConfig&#34;</span> url_shortener_be:latest
+</span></span></code></pre></div><p>Note that I&rsquo;m using an environment variable to set the config on running time. It&rsquo;s because the image and the code are the same for any environment but the config is not.</p>
+<p>This is my <code>config.py</code> file that manages which config is loading in the app depending on the environment variable.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>    <span style="color:#a2f;font-weight:bold">from</span> <span style="color:#00f;font-weight:bold">os</span> <span style="color:#a2f;font-weight:bold">import</span> environ
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#a2f;font-weight:bold">class</span> <span style="color:#00f">Config</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#b44">&#34;&#34;&#34;Base config&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        DEBUG <span style="color:#666">=</span> <span style="color:#a2f;font-weight:bold">False</span>
+</span></span><span style="display:flex;"><span>        TESTING <span style="color:#666">=</span> <span style="color:#a2f;font-weight:bold">False</span>
+</span></span><span style="display:flex;"><span>        SECRET_KEY <span style="color:#666">=</span> environ<span style="color:#666">.</span>get(<span style="color:#b44">&#39;SECRET_KEY&#39;</span>)
+</span></span><span style="display:flex;"><span>        JWT_SECRET_KEY <span style="color:#666">=</span> environ<span style="color:#666">.</span>get(<span style="color:#b44">&#39;JWT_SECRET_KEY&#39;</span>)
+</span></span><span style="display:flex;"><span>        SHORT_BASE_URL <span style="color:#666">=</span> <span style="color:#b44">&#34;https://ma.al/&#34;</span>
+</span></span><span style="display:flex;"><span>        SQLALCHEMY_TRACK_MODIFICATIONS <span style="color:#666">=</span> <span style="color:#a2f;font-weight:bold">False</span>
+</span></span><span style="display:flex;"><span>        BCRYPT_LOG_ROUNDS <span style="color:#666">=</span> <span style="color:#666">10</span>
+</span></span><span style="display:flex;"><span>        SWAGGER <span style="color:#666">=</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#b44">&#39;title&#39;</span>: <span style="color:#b44">&#39;URL Shortener API&#39;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#b44">&#39;uiversion&#39;</span>: <span style="color:#666">3</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#a2f;font-weight:bold">class</span> <span style="color:#00f">ProductionConfig</span>(Config):
+</span></span><span style="display:flex;"><span>        <span style="color:#080;font-style:italic"># DATABASE CONFIG</span>
+</span></span><span style="display:flex;"><span>        DB_SERVER <span style="color:#666">=</span> environ<span style="color:#666">.</span>get(<span style="color:#b44">&#39;DB_SERVER&#39;</span>)
+</span></span><span style="display:flex;"><span>        DB_TYPE <span style="color:#666">=</span> <span style="color:#b44">&#39;postgresql&#39;</span>
+</span></span><span style="display:flex;"><span>        DB_USERNAME <span style="color:#666">=</span> environ<span style="color:#666">.</span>get(<span style="color:#b44">&#39;DB_USERNAME&#39;</span>)
+</span></span><span style="display:flex;"><span>        DB_PASSWORD <span style="color:#666">=</span> environ<span style="color:#666">.</span>get(<span style="color:#b44">&#39;DB_PASSWORD&#39;</span>)
+</span></span><span style="display:flex;"><span>        DB_NAME <span style="color:#666">=</span> environ<span style="color:#666">.</span>get(<span style="color:#b44">&#39;DB_NAME&#39;</span>)
+</span></span><span style="display:flex;"><span>        SHORT_BASE_URL <span style="color:#666">=</span> environ<span style="color:#666">.</span>get(<span style="color:#b44">&#39;SHORT_BASE_URL&#39;</span>)
+</span></span><span style="display:flex;"><span>        SQLALCHEMY_DATABASE_URI <span style="color:#666">=</span> <span style="color:#b44">f</span><span style="color:#b44">&#34;</span><span style="color:#b68;font-weight:bold">{</span>DB_TYPE<span style="color:#b68;font-weight:bold">}</span><span style="color:#b44">://</span><span style="color:#b68;font-weight:bold">{</span>DB_USERNAME<span style="color:#b68;font-weight:bold">}</span><span style="color:#b44">:</span><span style="color:#b68;font-weight:bold">{</span>DB_PASSWORD<span style="color:#b68;font-weight:bold">}</span><span style="color:#b44">@</span><span style="color:#b68;font-weight:bold">{</span>DB_SERVER<span style="color:#b68;font-weight:bold">}</span><span style="color:#b44">/</span><span style="color:#b68;font-weight:bold">{</span>DB_NAME<span style="color:#b68;font-weight:bold">}</span><span style="color:#b44">&#34;</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#a2f;font-weight:bold">class</span> <span style="color:#00f">DevConfig</span>(Config):
+</span></span><span style="display:flex;"><span>        ENV <span style="color:#666">=</span> <span style="color:#b44">&#39;development&#39;</span>
+</span></span><span style="display:flex;"><span>        TESTING <span style="color:#666">=</span> <span style="color:#a2f;font-weight:bold">False</span>
+</span></span><span style="display:flex;"><span>        DEBUG <span style="color:#666">=</span> <span style="color:#a2f;font-weight:bold">False</span>
+</span></span><span style="display:flex;"><span>        SECRET_KEY <span style="color:#666">=</span> <span style="color:#b44">&#39;&lt;dev_secret_key&gt;&#39;</span>
+</span></span><span style="display:flex;"><span>        JWT_SECRET_KEY <span style="color:#666">=</span> <span style="color:#b44">&#39;&lt;dev_jwt_secret_key&gt;&#39;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#080;font-style:italic"># DATABASE CONFIG</span>
+</span></span><span style="display:flex;"><span>        SQLALCHEMY_DATABASE_URI <span style="color:#666">=</span> <span style="color:#b44">&#39;sqlite:///urls.db&#39;</span>
+</span></span><span style="display:flex;"><span>        SHORT_BASE_URL <span style="color:#666">=</span> <span style="color:#b44">&#34;https://dev.ma.al/&#34;</span>
+</span></span><span style="display:flex;"><span>    
+</span></span></code></pre></div><p>You can add as many configs as you want, in this particular case the big difference is that I&rsquo;m using an <code>sqlite</code> instance for my dev environment and a <code>postgresql</code> instance for my production environment.</p>
+<h2 id="react-app---frontend">React App - Frontend <a href="#react-app---frontend" class="anchor">🔗</a></h2><p>This part of the app was not so easy to start without having some knowledge about React. It really took me some time to understand how to deal with some basics things and debuging the app as well. But I finally did it, I wrote some functional frontend app (that really needs more love, but it&rsquo;s working). So let&rsquo;s see how we can change from <code>npm start</code> to run the app inside a <code>docker</code> container.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Docker" data-lang="Docker"><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">FROM</span><span style="color:#b44"> node:current-alpine3.17 AS build</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span><span style="color:#a2f;font-weight:bold">WORKDIR</span><span style="color:#b44"> /usr/app</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span><span style="color:#a2f;font-weight:bold">COPY</span> . /usr/app/<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span><span style="color:#a2f;font-weight:bold">ARG</span> REACT_APP_BASE_API_URL<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span><span style="color:#a2f;font-weight:bold">ENV</span> REACT_APP_BASE_API_URL <span style="color:#b8860b">$REACT_APP_BASE_API_URL</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span><span style="color:#a2f;font-weight:bold">RUN</span> npm ci<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span><span style="color:#a2f;font-weight:bold">RUN</span> npm run build<span style="">
+</span></span></span><span style="display:flex;"><span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span><span style="color:#a2f;font-weight:bold">FROM</span><span style="color:#b44"> nginx:alpine-slim</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span><span style="color:#a2f;font-weight:bold">EXPOSE</span><span style="color:#b44"> 80</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span><span style="color:#a2f;font-weight:bold">COPY</span> ./nginx/default.conf /etc/nginx/conf.d/default.conf<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span><span style="color:#a2f;font-weight:bold">COPY</span> --from<span style="color:#666">=</span>build /usr/app/build /usr/share/nginx/html<span style="">
+</span></span></span></code></pre></div><p>There is no mystery here, but the real problem, I have to say, was using environment variables inside the project. I just only wanted to pass an environment variable as the base url of the API, but I found out that React is really picky when working with envs, and even more when it runs into a Docker container.</p>
+<p>The only way that I found was to build the image and pass the environment variable while building it. To be more clear, this is how the docker part looks when you set the environment variable.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Docker" data-lang="Docker"><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">ARG</span> REACT_APP_BASE_API_URL<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span><span style="color:#a2f;font-weight:bold">ENV</span> REACT_APP_BASE_API_URL <span style="color:#b8860b">$REACT_APP_BASE_API_URL</span><span style="">
+</span></span></span></code></pre></div><p>And this is the <code>docker build</code> command that I had to use to build the image.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ docker build --progress<span style="color:#666">=</span>plain --no-cache --platform linux/amd64 . --tag url_shortener_fe:latest --build-arg <span style="color:#b8860b">REACT_APP_BASE_API_URL</span><span style="color:#666">=</span><span style="color:#b44">&#34;http://localhost:8002/api/v1/&#34;</span>
+</span></span></code></pre></div><blockquote>
+<p>🙃 <strong>Note:</strong> The <code>--build-arg</code> parameter was the only easy way without touching the code that I found to work with envs</p>
+</blockquote>
+<p>And finally it&rsquo;s running like this&hellip;</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ docker run -it -p 8003:80 url_shortener_fe:latest -e <span style="color:#b8860b">REACT_APP_BASE_API_URL</span><span style="color:#666">=</span><span style="color:#b44">&#39;http://localhost:8002/api/v1/&#39;</span>
+</span></span></code></pre></div><p>My app is up and running.</p>
+<p><p class="markdown-image">
+  <img src="/images/post7/frontend.png" alt=""  />
+</p></p>
+<hr>
+<h2 id="docker-compose">Docker Compose <a href="#docker-compose" class="anchor">🔗</a></h2><p>Last but not least, let&rsquo;s run everything together with docker-compose. I&rsquo;m only going to change the database engine to be prepared when we think to deploy our app in a different place than our laptop.</p>
+<p>Our <code>docker-compose.yaml</code> looks like this&hellip;</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Docker" data-lang="Docker"><span style="display:flex;"><span>version: <span style="color:#b44">&#34;3.9&#34;</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>services:<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>    web:<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>    build: ./url_shortener_be<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>    ports: <span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        - <span style="color:#b44">&#34;8000:80&#34;</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>    environment:<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        FLASK_ENV: <span style="color:#b44">&#34;production&#34;</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        SECRET_KEY: <span style="color:#b44">&#34;&lt;secret_key&gt;&#34;</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        JWT_SECRET_KEY: <span style="color:#b44">&#34;&lt;jwt_secret_key&gt;&#34;</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        DB_SERVER: <span style="color:#b44">&#34;db&#34;</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        DB_TYPE: <span style="color:#b44">&#34;postgresql&#34;</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        DB_USERNAME: <span style="color:#b44">&#34;postgres&#34;</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        DB_PASSWORD: <span style="color:#b44">&#34;Passw0rd123&#34;</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        DB_NAME: <span style="color:#b44">&#34;url_shortener&#34;</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        SHORT_BASE_URL: <span style="color:#b44">&#34;http://ma.alp/&#34;</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        CONFIGURATION_SETUP: <span style="color:#b44">&#34;config.ProductionConfig&#34;</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        DOCKER_DEFAULT_PLATFORM: <span style="color:#b44">&#34;linux/amd64&#34;</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>    depends_on:<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        - db<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        - frontend<span style="">
+</span></span></span><span style="display:flex;"><span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>    db:<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>    image: postgres<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>    environment:<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        POSTGRES_PASSWORD: <span style="color:#b44">&#34;Passw0rd123&#34;</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        POSTGRES_DB: <span style="color:#b44">&#34;url_shortener&#34;</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>    ports:<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        - <span style="color:#b44">&#34;5432&#34;</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>    frontend:<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>    build: <span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        context: ./url_shortener_fe<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        args:<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        REACT_APP_BASE_API_URL: <span style="color:#b44">&#34;http://web:8000/api/v1/&#34;</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>    ports:<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        - <span style="color:#b44">&#34;3000:80&#34;</span><span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>    depends_on:<span style="">
+</span></span></span><span style="display:flex;"><span><span style=""></span>        - db<span style="">
+</span></span></span></code></pre></div><blockquote>
+<p>ℹ️ <strong>Note:</strong> Notice that we are building our <code>docker-compose.yaml</code> file from a different folder level that where we have our Dockerfiles.</p>
+</blockquote>
+<blockquote>
+<p>ℹ️ <strong>Note:</strong> The second thing to notice is that we add the <code>db</code> configuration on the compose file and we link the configuration in the api configuration.</p>
+</blockquote>
+<p>Now, we just simple run&hellip;</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ docker-compose build .
+</span></span><span style="display:flex;"><span>$ docker-compose up -d 
+</span></span><span style="display:flex;"><span><span style="color:#666">[</span>+<span style="color:#666">]</span> Running 3/3
+</span></span><span style="display:flex;"><span>    ⠿ Container url_shortener-db-1        Started                                                                                          0.3s
+</span></span><span style="display:flex;"><span>    ⠿ Container url_shortener-frontend-1  Started                                                                                          0.5s
+</span></span><span style="display:flex;"><span>    ⠿ Container url_shortener-web-1       Started                                                                                          0.7s
+</span></span></code></pre></div><p>And now the app is running on our local machine but in 3 different containers and ready to be used on another type of deployment.</p>
+
+    </div>
+
+    
+        <div class="tags">
+            
+                <a href="https://mauricubo.com/tags/python">python</a>
+            
+                <a href="https://mauricubo.com/tags/flask">flask</a>
+            
+                <a href="https://mauricubo.com/tags/docker">docker</a>
+            
+                <a href="https://mauricubo.com/tags/docker-compose">docker-compose</a>
+            
+        </div>
+    
+    
+    
+
+</section>
+
+
+    </main>
+    
+    <footer id="footer">
+    
+        <div id="social">
+
+
+    <a class="symbol" href="https://github.com/mauricubo/" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28"  viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>Github</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Social-Icons---Rounded-Black" transform="translate(-264.000000, -939.000000)">
+            <g id="Github" transform="translate(264.000000, 939.000000)">
+                <path d="M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z" id="Rounded" fill="#bbbbbb"></path>
+                <path d="M35.9985,13 C22.746,13 12,23.7870921 12,37.096644 C12,47.7406712 18.876,56.7718301 28.4145,59.9584121 C29.6145,60.1797862 30.0525,59.4358488 30.0525,58.7973276 C30.0525,58.2250681 30.0315,56.7100863 30.0195,54.6996482 C23.343,56.1558981 21.9345,51.4693938 21.9345,51.4693938 C20.844,48.6864054 19.2705,47.9454799 19.2705,47.9454799 C17.091,46.4500754 19.4355,46.4801943 19.4355,46.4801943 C21.843,46.6503662 23.1105,48.9634994 23.1105,48.9634994 C25.2525,52.6455377 28.728,51.5823398 30.096,50.9649018 C30.3135,49.4077535 30.9345,48.3460615 31.62,47.7436831 C26.2905,47.1352808 20.688,45.0691228 20.688,35.8361671 C20.688,33.2052792 21.6225,31.0547881 23.1585,29.3696344 C22.911,28.7597262 22.0875,26.3110578 23.3925,22.9934585 C23.3925,22.9934585 25.4085,22.3459017 29.9925,25.4632101 C31.908,24.9285993 33.96,24.6620468 36.0015,24.6515052 C38.04,24.6620468 40.0935,24.9285993 42.0105,25.4632101 C46.5915,22.3459017 48.603,22.9934585 48.603,22.9934585 C49.9125,26.3110578 49.089,28.7597262 48.8415,29.3696344 C50.3805,31.0547881 51.309,33.2052792 51.309,35.8361671 C51.309,45.0917119 45.6975,47.1292571 40.3515,47.7256117 C41.2125,48.4695491 41.9805,49.9393525 41.9805,52.1877301 C41.9805,55.4089489 41.9505,58.0067059 41.9505,58.7973276 C41.9505,59.4418726 42.3825,60.1918338 43.6005,59.9554002 C53.13,56.7627944 60,47.7376593 60,37.096644 C60,23.7870921 49.254,13 35.9985,13" fill="#FFFFFF"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    </a>
+
+    <a class="symbol" href="https://stackoverflow.com/users/10979237" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28" viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>stackoverflow</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Social-Icons---Rounded-Black" transform="translate(-488.000000, -1163.000000)">
+            <g id="stackoverflow" transform="translate(488.000000, 1163.000000)">
+                <path d="M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z" id="Rounded" fill="#bbbbbb"></path>
+                <path d="M42.0860128,53.5922927 L22.9745951,53.6011499 L22.9729497,49.5538824 L42.0835447,49.5440929 L42.0860128,53.5922927 L42.0860128,53.5922927 Z M55,30.6708298 L51.7306912,12 L47.7087256,12.6920259 L50.9775643,31.3628557 L55,30.6708298 L55,30.6708298 Z M42.5455518,44.3547147 L23.5156994,42.616026 L23.1410164,46.6470941 L42.1712214,48.3841513 L42.5455518,44.3547147 L42.5455518,44.3547147 Z M43.8009984,39.0731519 L25.3459811,34.1539179 L24.285633,38.0621508 L42.7419431,42.9819676 L43.8009984,39.0731519 L43.8009984,39.0731519 Z M46.2103463,34.4436411 L29.7494464,24.8164635 L27.6748215,28.3015328 L44.1365441,37.9292931 L46.2103463,34.4436411 L46.2103463,34.4436411 Z M50.2466504,31.6088756 L46.8745036,33.8883189 L36.106599,18.2318456 L39.4792159,15.9517031 L50.2466504,31.6088756 Z M45.3315807,40.2784283 L48.5799693,40.2784283 L48.5799693,60 L17,60 L17,40.2784283 L20.2648427,40.2784283 L20.2648427,56.8243495 L45.3315807,56.8243495 L45.3315807,40.2784283 Z" fill="#FFFFFF"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    </a>
+
+    <a class="symbol" href="https://twitter.com/mauricubo" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="438.536px" height="438.536px" viewBox="0 0 438.536 438.536" style="enable-background:new 0 0 438.536 438.536;"
+	 xml:space="preserve">
+<g>
+	<path d="M414.41,24.123C398.333,8.042,378.963,0,356.315,0H82.228C59.58,0,40.21,8.042,24.126,24.123
+		C8.045,40.207,0.003,59.576,0.003,82.225v274.084c0,22.647,8.042,42.018,24.123,58.102c16.084,16.084,35.454,24.126,58.102,24.126
+		h274.084c22.648,0,42.018-8.042,58.095-24.126c16.084-16.084,24.126-35.454,24.126-58.102V82.225
+		C438.532,59.576,430.49,40.204,414.41,24.123z M335.471,168.735c0.191,1.713,0.288,4.278,0.288,7.71
+		c0,15.989-2.334,32.025-6.995,48.104c-4.661,16.087-11.8,31.504-21.416,46.254c-9.606,14.749-21.074,27.791-34.396,39.115
+		c-13.325,11.32-29.311,20.365-47.968,27.117c-18.648,6.762-38.637,10.143-59.953,10.143c-33.116,0-63.76-8.952-91.931-26.836
+		c4.568,0.568,9.329,0.855,14.275,0.855c27.6,0,52.439-8.565,74.519-25.7c-12.941-0.185-24.506-4.179-34.688-11.991
+		c-10.185-7.803-17.273-17.699-21.271-29.691c4.947,0.76,8.658,1.137,11.132,1.137c4.187,0,9.042-0.76,14.56-2.279
+		c-13.894-2.669-25.598-9.562-35.115-20.697c-9.519-11.136-14.277-23.84-14.277-38.114v-0.571
+		c10.085,4.755,19.602,7.229,28.549,7.422c-17.321-11.613-25.981-28.265-25.981-49.963c0-10.66,2.758-20.747,8.278-30.264
+		c15.035,18.464,33.311,33.213,54.816,44.252c21.507,11.038,44.54,17.227,69.092,18.558c-0.95-3.616-1.427-8.186-1.427-13.704
+		c0-16.562,5.853-30.692,17.56-42.399c11.703-11.706,25.837-17.561,42.394-17.561c17.515,0,32.079,6.283,43.688,18.846
+		c13.134-2.474,25.892-7.33,38.26-14.56c-4.757,14.652-13.613,25.788-26.55,33.402c12.368-1.716,23.88-4.95,34.537-9.708
+		C357.458,149.793,347.462,160.166,335.471,168.735z"/>
+</g>
+</svg>
+
+    </a>
+
+
+</div>
+
+    
+
+    <div class="copyright">
+    
+       © Copyright 
+       2023 
+       <span class="split">
+        <svg fill="#bbbbbb" width="15" height="15" version="1.1" id="heart-15" xmlns="http://www.w3.org/2000/svg" width="15px" height="15px" viewBox="0 0 15 15">
+  <path d="M13.91,6.75c-1.17,2.25-4.3,5.31-6.07,6.94c-0.1903,0.1718-0.4797,0.1718-0.67,0C5.39,12.06,2.26,9,1.09,6.75&#xA;&#x9;C-1.48,1.8,5-1.5,7.5,3.45C10-1.5,16.48,1.8,13.91,6.75z"/>
+</svg>
+       </span>
+       Mauricio Alpuin
+    
+    </div>
+
+    
+      <div class="powerby">
+        Powered by <a href='http://www.gohugo.io/'>Hugo</a> Theme By <a href='https://github.com/nodejh/hugo-theme-mini'>nodejh</a>
+      </div>
+    
+</footer>
+
+
+
+  </body>
+</html>

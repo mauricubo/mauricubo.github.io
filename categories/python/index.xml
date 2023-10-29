@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>python on I&#39;m Mauricio Alpuin</title>
+    <link>https://mauricubo.com/categories/python/</link>
+    <description>Recent content in python on I&#39;m Mauricio Alpuin</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 20 Feb 2023 15:16:46 +0000</lastBuildDate><atom:link href="https://mauricubo.com/categories/python/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Journey from your laptop to a CI/CD to Kubernetes - Part 2</title>
+      <link>https://mauricubo.com/posts/journey-from-your-laptop-to-a-ci/cd-to-kubernetes-part-2/</link>
+      <pubDate>Mon, 20 Feb 2023 15:16:46 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/posts/journey-from-your-laptop-to-a-ci/cd-to-kubernetes-part-2/</guid>
+      <description>In the previous post we finished working with the orchestration of the containers with docker-compose and we have covered the first three items on the list, and now we are ready to deploy our application on a Kubernetes cluster.
+In order to make this possible we are going to follow these steps&amp;hellip;
+Create a namespace Create the database deployment, service and the secrets Create the backend deployment, service, secrets and ingress Create the frontend deployment, service, secrets and ingress The Namespace 🔗This is the yaml that we need to create the namespace with:</description>
+    </item>
+    
+    <item>
+      <title>Speech to Text - Transcribe your WhatsApp audios</title>
+      <link>https://mauricubo.com/posts/speech-to-text-transcribe-your-whatsapp-audios/</link>
+      <pubDate>Mon, 20 Feb 2023 04:02:34 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/posts/speech-to-text-transcribe-your-whatsapp-audios/</guid>
+      <description>The other day I was playing with the openai library that transcribes and translates audios, this library is call whisper and there is a package for python.
+But I really wanted to use it for something else. Almost every day, I receive Whatsapp audios when I am in the middle of a meeting. So I decided to write some code to integrate the transcriber library into the Whatsapp API. And this is the Speech to Text Bot.</description>
+    </item>
+    
+    <item>
+      <title>Journey from your laptop to a CI/CD to Kubernetes</title>
+      <link>https://mauricubo.com/posts/journey-from-your-laptop-to-a-ci/cd-to-kubernetes/</link>
+      <pubDate>Fri, 10 Feb 2023 13:58:00 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/posts/journey-from-your-laptop-to-a-ci/cd-to-kubernetes/</guid>
+      <description>In today&amp;rsquo;s post I want to write something that came to my mind when I was trying to write code. In particular I was trying to remember how to write code again, so I started to write some kind of API with Flask.
+Many people love Flask for its simplicity and I wanted to give it a try to see how easy it was to create a functional API from scratch.</description>
+    </item>
+    
+  </channel>
+</rss>

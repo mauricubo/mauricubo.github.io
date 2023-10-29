@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <title>Install Kubernetes from scratch | I&#39;m Mauricio Alpuin</title>
+
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
+<meta name="viewport" content="width=device-width,minimum-scale=1">
+<meta name="description" content="On my way to get the Kubernetes Administrator Certificate (CKA) I decided to install my own Kubernetes cluster from scratch to get a better understanding about the components behind a cluster.
+In this tutorial we are going to use the following components in order to install our own cluster and play with it.
+Kubernetes Docker Terraform DigitalOcean Flannel Ubuntu I&rsquo;m going to assume that you have already read my latest post and you have your DigitalOcean account or you have already had three virtual machines that we could use for installing and configuring our cluster.">
+<meta name="generator" content="Hugo 0.118.2">
+
+
+  <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link rel="shortcut icon" href="/images/favico.icon.png" type="image/x-icon" />
+
+
+
+
+
+
+
+
+  </head>
+
+  <body>
+    <nav class="navigation">
+	
+		<a href="/"> <span class="arrow">←</span>Home</a>
+	
+	<a href="/posts">Archive</a>
+	<a href="/tags">Tags</a>
+	<a href="/about">About</a>
+
+	
+
+	
+</nav>
+
+
+    <main class="main">
+      
+
+<section id="single">
+    <h1 class="title">Install Kubernetes from scratch</h1>
+
+    <div class="tip">
+        <time datetime="2022-10-19 18:21:33 &#43;0000 UTC">Oct 19, 2022</time>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          1392 words
+        </span>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          7 minute read
+        </span>
+    </div>
+
+    
+    
+
+
+    <div class="content">
+      <p>On my way to get the <a href="https://kubernetes.io/training/" target="_blank" rel="noopener">Kubernetes Administrator Certificate</a> (CKA) I decided to install my own Kubernetes cluster from scratch to get a better understanding about the components behind a cluster.</p>
+<p>In this tutorial we are going to use the following components in order to install our own cluster and play with it.</p>
+<ul>
+<li>Kubernetes</li>
+<li>Docker</li>
+<li>Terraform</li>
+<li>DigitalOcean</li>
+<li>Flannel</li>
+<li>Ubuntu</li>
+</ul>
+<p>I&rsquo;m going to assume that you have already read my latest post and you have your DigitalOcean account or you have already had three virtual machines that we could use for installing and configuring our cluster.</p>
+<p><a href="/posts/deploy-your-own-hosted-ghost-blog-on-kubernetes-part-1/">Ghost Blog Installation Part 1</a></p>
+<hr>
+<h2 id="use-terraform-to-create-your-virtual-machines">Use Terraform to create your virtual machines <a href="#use-terraform-to-create-your-virtual-machines" class="anchor">🔗</a></h2><p>Let&rsquo;s start creating our virtual machines, as I said before, I&rsquo;m going to create it on DigitalOcean using Terraform. So your next step is creating your terraform script specifying your resources that in this particular case are going to be three servers (it could have different specifications, but for this example we are going to create them with the same size, keys, zone, etc). We are going to name the folder <code>kubernetes_from_scratch</code> and it will looks like:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>main.tf
+</span></span><span style="display:flex;"><span>provider.tf
+</span></span><span style="display:flex;"><span>variables.tf
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Terraform" data-lang="Terraform"><span style="display:flex;"><span><span style="color:#080;font-style:italic"># provider.tf
+</span></span></span><span style="display:flex;"><span><span style="color:#080;font-style:italic"></span>terraform {
+</span></span><span style="display:flex;"><span>    required_providers {
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">digitalocean</span> = {
+</span></span><span style="display:flex;"><span>        <span style="color:#b44">source</span> = <span style="color:#b44">&#34;digitalocean/digitalocean&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#b44">version</span> = <span style="color:#b44">&#34;~&gt; 2.0&#34;</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">
+</span></span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">provider</span> <span style="color:#b44">&#34;digitalocean&#34;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">token</span> = <span style="color:#a2f">var</span>.do_token
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Terraform" data-lang="Terraform"><span style="display:flex;"><span><span style="color:#080;font-style:italic"># variables.tf
+</span></span></span><span style="display:flex;"><span><span style="color:#080;font-style:italic"></span><span style="color:#a2f;font-weight:bold">variable</span> <span style="color:#b44">&#34;do_token&#34;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">type</span> = string
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">
+</span></span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">variable</span> <span style="color:#b44">&#34;ssh_key&#34;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">type</span> = string
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">default</span> = <span style="color:#b44">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">
+</span></span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">variable</span> <span style="color:#b44">&#34;region&#34;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">type</span> =<span style="color:#a2f"> map</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">default</span> = {
+</span></span><span style="display:flex;"><span>        <span style="color:#b44">&#34;default&#34;</span> <span style="color:#666">=</span> <span style="color:#b44">&#34;sfo3&#34;</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">
+</span></span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">variable</span> <span style="color:#b44">&#34;nodes&#34;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">type</span> =<span style="color:#a2f"> list</span>(string)
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">default</span> = [<span style="color:#b44">&#34;master&#34;</span>, <span style="color:#b44">&#34;worker1&#34;</span>, <span style="color:#b44">&#34;worker2&#34;</span>]
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">
+</span></span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">variable</span> <span style="color:#b44">&#34;size&#34;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">type</span>    = string
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">default</span>    = <span style="color:#b44">&#34;s-2vcpu-4gb&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">
+</span></span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">variable</span> <span style="color:#b44">&#34;image&#34;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">type</span>    = string
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">default</span>    = <span style="color:#b44">&#34;ubuntu-20-04-x64&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Terraform" data-lang="Terraform"><span style="display:flex;"><span><span style="color:#080;font-style:italic"># main.tf
+</span></span></span><span style="display:flex;"><span><span style="color:#080;font-style:italic"></span><span style="color:#a2f;font-weight:bold">data</span> <span style="color:#b44">&#34;digitalocean_ssh_key&#34;</span> <span style="color:#b44">&#34;ssh_key&#34;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">name</span> = <span style="color:#b44">&#34;&lt;your_uploaded_ssh_key_reference&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">
+</span></span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">resource</span> <span style="color:#b44">&#34;digitalocean_droplet&#34;</span> <span style="color:#b44">&#34;kubernetes&#34;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">name</span>        = <span style="color:#a2f">var</span>.nodes[<span style="color:#a2f">count</span>.index]
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">image</span>       = <span style="color:#a2f">var</span>.image
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">region</span>      =<span style="color:#a2f"> lookup</span>(<span style="color:#a2f">var</span>.region, terraform.workspace)
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">ssh_keys</span>    = [
+</span></span><span style="display:flex;"><span><span style="color:#a2f;font-weight:bold">        data</span>.digitalocean_ssh_key.ssh_key.id
+</span></span><span style="display:flex;"><span>    ]
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">size</span>        = <span style="color:#a2f">var</span>.size
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#b44">count</span>       =<span style="color:#a2f"> length</span>(<span style="color:#a2f">var</span>.nodes)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>We execute the <code>init</code>, <code>plan</code> and <code>apply</code> command and wait until all the resources are created. Once that your script is finished, we have to wait until DO assigns a public IP address to each droplet.</p>
+<blockquote>
+<p>💡 <strong>Note:</strong> You can configure your ~/.ssh/config file and add all the data that you need to connect to your server.</p>
+</blockquote>
+<hr>
+<h2 id="install-docker-on-your-virtual-machines">Install docker on your virtual machines <a href="#install-docker-on-your-virtual-machines" class="anchor">🔗</a></h2><p>We are going to use <code>docker engine</code> as our container runtime and we follow the official documentation. You can use a different container runtime, like <code>containerd</code> or <code>CRI-O</code>.</p>
+<p><a href="https://docs.docker.com/engine/install/ubuntu/" target="_blank" rel="noopener">Install Docker Engine on Ubuntu</a></p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#080;font-style:italic"># Install docker master and cluster nodes</span>
+</span></span><span style="display:flex;"><span>sudo apt-get update
+</span></span><span style="display:flex;"><span>sudo apt-get install -y <span style="color:#b62;font-weight:bold">\
+</span></span></span><span style="display:flex;"><span><span style="color:#b62;font-weight:bold"></span>    ca-certificates <span style="color:#b62;font-weight:bold">\
+</span></span></span><span style="display:flex;"><span><span style="color:#b62;font-weight:bold"></span>    curl <span style="color:#b62;font-weight:bold">\
+</span></span></span><span style="display:flex;"><span><span style="color:#b62;font-weight:bold"></span>    gnupg <span style="color:#b62;font-weight:bold">\
+</span></span></span><span style="display:flex;"><span><span style="color:#b62;font-weight:bold"></span>    lsb-release
+</span></span></code></pre></div><p>We continue adding the keys and the official repo to download the packages.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo mkdir -p /etc/apt/keyrings
+</span></span><span style="display:flex;"><span>curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+</span></span><span style="display:flex;"><span><span style="color:#a2f">echo</span> <span style="color:#b62;font-weight:bold">\ </span><span style="color:#b44">&#34;deb [arch=</span><span style="color:#a2f;font-weight:bold">$(</span>dpkg --print-architecture<span style="color:#a2f;font-weight:bold">)</span><span style="color:#b44"> signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \ </span><span style="color:#a2f;font-weight:bold">$(</span>lsb_release -cs<span style="color:#a2f;font-weight:bold">)</span><span style="color:#b44"> stable&#34;</span> | sudo tee /etc/apt/sources.list.d/docker.list &gt; /dev/null
+</span></span></code></pre></div><p>Install <code>docker engine</code>.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt-get update
+</span></span><span style="display:flex;"><span>sudo apt-get install -y docker-ce docker-ce-cli <span style="color:#b62;font-weight:bold">\ </span>
+</span></span><span style="display:flex;"><span>    containerd.io docker-compose-plugin
+</span></span><span style="display:flex;"><span>sudo service docker start
+</span></span><span style="display:flex;"><span>sudo docker run hello-world
+</span></span></code></pre></div><p>The next step will be to install a <code>container runtime interface</code> because <code>docker engine</code> doesn&rsquo;t work with the default kubernetes main protocol that uses kubelet to communicate with the runtime. For that reason, we need to install the <code>cri-dockerd</code> plugin on all the nodes.</p>
+<p><a href="https://github.com/Mirantis/cri-dockerd" target="_blank" rel="noopener">GitHub - Mirantis/cri-dockerd</a></p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#080;font-style:italic"># Installing cri-dockerd plugin in all the nodes</span>
+</span></span><span style="display:flex;"><span>git clone https://github.com/Mirantis/cri-dockerd.git
+</span></span><span style="display:flex;"><span><span style="color:#080;font-style:italic"># Run these commands as root</span>
+</span></span><span style="display:flex;"><span><span style="color:#080;font-style:italic">###Install GO###</span>
+</span></span><span style="display:flex;"><span>wget https://storage.googleapis.com/golang/getgo/installer_linux
+</span></span><span style="display:flex;"><span>chmod +x ./installer_linux
+</span></span><span style="display:flex;"><span>./installer_linux
+</span></span><span style="display:flex;"><span><span style="color:#a2f">source</span> ~/.bash_profile
+</span></span><span style="display:flex;"><span><span style="color:#a2f">cd</span> cri-dockerd
+</span></span><span style="display:flex;"><span>mkdir bin
+</span></span><span style="display:flex;"><span>go build -o bin/cri-dockerd
+</span></span><span style="display:flex;"><span>mkdir -p /usr/local/bin
+</span></span><span style="display:flex;"><span>install -o root -g root -m <span style="color:#666">0755</span> bin/cri-dockerd /usr/local/bin/cri-dockerd
+</span></span><span style="display:flex;"><span>cp -a packaging/systemd/* /etc/systemd/system
+</span></span><span style="display:flex;"><span>sed -i -e <span style="color:#b44">&#39;s,/usr/bin/cri-dockerd,/usr/local/bin/cri-dockerd,&#39;</span> /etc/systemd/system/cri-docker.service
+</span></span><span style="display:flex;"><span>systemctl daemon-reload
+</span></span><span style="display:flex;"><span>systemctl <span style="color:#a2f">enable</span> cri-docker.service
+</span></span><span style="display:flex;"><span>systemctl <span style="color:#a2f">enable</span> --now cri-docker.socket
+</span></span></code></pre></div><hr>
+<h2 id="install-kubeadm-kubelet-and-kubectl">Install kubeadm, kubelet and kubectl <a href="#install-kubeadm-kubelet-and-kubectl" class="anchor">🔗</a></h2><ul>
+<li><code>kubeadm</code> is a tool that bootstrap a serie of commands that allow us install, configure and manage a Kubernetes Cluster. With this tool we can create our <code>control plane</code> and join our <code>nodes</code> to the cluster.</li>
+<li><code>kubelet</code> is the agent that runs in each node and has the function to apply the PodSpecs described by the Kubernetes Cluster ensuring that everything is running with those specs.</li>
+<li><code>kubectl</code> is the tool that we use to manage the cluster. It allows you to run the commands against the Kubernetes cluster to deploy, inspect and manage all the resources that we need.</li>
+</ul>
+<p>It&rsquo;s always good to take a look at the official documentation.</p>
+<p><a href="https://kubernetes.io/docs/concepts/overview/components/" target="_blank" rel="noopener">Kubernetes Components</a></p>
+<p>We need to install the basic tools.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt-get update
+</span></span><span style="display:flex;"><span>sudo apt-get install -y apt-transport-https ca-certificates curl
+</span></span></code></pre></div><p>Now, we add the keys and the repos to download the official packages.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+</span></span><span style="display:flex;"><span><span style="color:#a2f">echo</span> <span style="color:#b44">&#34;deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main&#34;</span> | sudo tee /etc/apt/sources.list.d/kubernetes.list
+</span></span></code></pre></div><p>We finally install the components.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt-get update
+</span></span><span style="display:flex;"><span>sudo apt-get install -y kubelet kubeadm kubectl
+</span></span><span style="display:flex;"><span>sudo apt-mark hold kubelet kubeadm kubectl
+</span></span></code></pre></div><hr>
+<h2 id="initializing-the-kubeadm-as-the-manager-node">Initializing the kubeadm as the manager node <a href="#initializing-the-kubeadm-as-the-manager-node" class="anchor">🔗</a></h2><p>Now it&rsquo;s the moment to initialize our control plane which is going to manage all the cluster nodes. We can decide later if we want to use our <code>controlplane</code> as a worker node too or just want to use it to manage the cluster.</p>
+<p>There are some parameters that we need to consider when we initialize the controlplane.</p>
+<ul>
+<li><code>--pod-network-cidr</code>: It&rsquo;s the IP address range that our cluster is going to use for our running pods inside the network. In some cases when we use an specific <code>network adapter</code> like <code>flannel</code> we have to set this parameter based on the compatibility of the tool (<a href="https://github.com/flannel-io/flannel#deploying-flannel-manually" target="_blank" rel="noopener">link here</a>).</li>
+<li><code>--cri-socket</code>: It&rsquo;s the path of the cri socket that kubernetes will use, in our particular case <code>cri-dockerd</code>. If we don&rsquo;t specify this parameter, kubernetes will try to autodetect the value.</li>
+<li><code>--apiserver-advertise-address</code>: Is the address that the API Server will be advirtise it&rsquo;s listening on. This address has to be accessible by all the nodes of the cluster.</li>
+<li><code>--control-plane-endpoint</code>: Is the IP address or the DNS name of the control plane.</li>
+</ul>
+<p><a href="https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/" target="_blank" rel="noopener">kubeadm init</a></p>
+<p>We initialize the <code>kubeadm</code>.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#080;font-style:italic"># Initialize the kubeadm</span>
+</span></span><span style="display:flex;"><span>kubeadm init --pod-network-cidr<span style="color:#666">=</span>10.244.0.0/16 --cri-socket<span style="color:#666">=</span>unix:///run/cri-dockerd.sock --apiserver-advertise-address<span style="color:#666">=</span>&lt;your_internal_server_ip&gt; --control-plane-endpoint<span style="color:#666">=</span>&lt;your_internal_server_ip&gt;
+</span></span></code></pre></div><p>We copy the config so we can manage the new cluster with the <code>kubectl</code> tool.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p <span style="color:#b8860b">$HOME</span>/.kube
+</span></span><span style="display:flex;"><span>sudo cp -i /etc/kubernetes/admin.conf <span style="color:#b8860b">$HOME</span>/.kube/config
+</span></span><span style="display:flex;"><span>sudo chown <span style="color:#a2f;font-weight:bold">$(</span>id -u<span style="color:#a2f;font-weight:bold">)</span>:<span style="color:#a2f;font-weight:bold">$(</span>id -g<span style="color:#a2f;font-weight:bold">)</span> <span style="color:#b8860b">$HOME</span>/.kube/config
+</span></span></code></pre></div><hr>
+<h2 id="joining-the-nodes-to-the-cluster">Joining the nodes to the cluster <a href="#joining-the-nodes-to-the-cluster" class="anchor">🔗</a></h2><p>Now it&rsquo;s time to add our worker nodes. In this step, we should execute the <code>kubeadm join</code> command on each node that we want to join to our cluster. But first, we can generate our join command executing the following command.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubeadm token create --print-join-command
+</span></span></code></pre></div><p>And now we can add our nodes to the cluster.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#080;font-style:italic"># Join the cluster nodes to the cluster</span>
+</span></span><span style="display:flex;"><span>kubeadm join 10.116.0.3:6443 --token 459fjk.eutg142f7lgipfau --discovery-token-ca-cert-hash sha256:6af4fbd8796405c233b105ecbee883680fe9143161fd877def92b23fc08ef794 --cri-socket<span style="color:#666">=</span>unix:///run/cri-dockerd.sock
+</span></span></code></pre></div><hr>
+<h2 id="installing-the-network-adapter">Installing the network adapter <a href="#installing-the-network-adapter" class="anchor">🔗</a></h2><p>We want to install a network adapter to extend the networking functionalities of our cluster. In this particular case, <code>flannel</code> is a tool that provides a layer 3 communication solution to manage the traffic between our nodes and pods and it&rsquo;s compatible with our <code>CRI docker engine</code>. <code>flannel</code> doesn&rsquo;t provide network policies, if we need that kind of solution we should think about using <a href="https://www.tigera.io/project-calico/" target="_blank" rel="noopener">calico</a> for example.</p>
+<p><a href="https://github.com/flannel-io/flannel#deploying-flannel-manually" target="_blank" rel="noopener">GitHub - flannel-io/flannel: flannel is a network fabric for containers, designed for Kubernetes</a></p>
+<p>We install flannel directly from the github repository.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#080;font-style:italic"># Installing the nework adapter</span>
+</span></span><span style="display:flex;"><span>kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+</span></span></code></pre></div><hr>
+<h2 id="testing-our-new-cluster">Testing our new cluster <a href="#testing-our-new-cluster" class="anchor">🔗</a></h2><p>Ok! We did it! We finally installed our own kubernetes cluster that is working with 2 worker nodes. Now it&rsquo;s time to test it.</p>
+<ol>
+<li>Run a simple pod and bash it ✅</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ kubectl run -it nginx --image nginx -- bash
+</span></span><span style="display:flex;"><span>If you don<span style="">&#39;</span>t see a <span style="color:#a2f">command</span> prompt, try pressing enter.
+</span></span><span style="display:flex;"><span>root@nginx:/# 
+</span></span></code></pre></div><ol start="2">
+<li>Run a pod and expose it with a service ✅</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ kubectl run echopod --image hashicorp/http-echo -- -text<span style="color:#666">=</span><span style="color:#b44">&#34;hello world!&#34;</span> -listen<span style="color:#666">=</span>:8080
+</span></span><span style="display:flex;"><span>pod/echopod created
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$ kubectl expose pod echopod --type<span style="color:#666">=</span>NodePort --port<span style="color:#666">=</span><span style="color:#666">8080</span> --target-port<span style="color:#666">=</span><span style="color:#666">8080</span>
+</span></span><span style="display:flex;"><span>service/echopod exposed
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$ kubectl get svc
+</span></span><span style="display:flex;"><span>NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT<span style="color:#666">(</span>S<span style="color:#666">)</span>          AGE
+</span></span><span style="display:flex;"><span>kubernetes   ClusterIP   10.152.183.1    &lt;none&gt;        443/TCP          40h
+</span></span><span style="display:flex;"><span>echopod      NodePort    10.152.183.70   &lt;none&gt;        8080:31873/TCP   8s
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$ curl 10.152.183.70:8080
+</span></span><span style="display:flex;"><span>hello world!
+</span></span></code></pre></div><ol start="3">
+<li>Test dns resolution ✅</li>
+</ol>
+<p>Let&rsquo;s see if we can get the IP address of the echopod service using the domain name.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ kubectl get svc echopod
+</span></span><span style="display:flex;"><span>NAME      TYPE       CLUSTER-IP      EXTERNAL-IP   PORT<span style="color:#666">(</span>S<span style="color:#666">)</span>          AGE
+</span></span><span style="display:flex;"><span>echopod   NodePort   10.152.183.70   &lt;none&gt;        8080:31873/TCP   94m
+</span></span></code></pre></div><p>Now we should get the ClusterIP with the <code>nslookup</code>.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ kubectl run -it busybox --image busybox -- sh
+</span></span><span style="display:flex;"><span>If you don<span style="">&#39;</span>t see a <span style="color:#a2f">command</span> prompt, try pressing enter.
+</span></span><span style="display:flex;"><span>/ <span style="color:#080;font-style:italic"># nslookup echopod.default.svc.cluster.local</span>
+</span></span><span style="display:flex;"><span>Server:		10.152.183.10
+</span></span><span style="display:flex;"><span>Address:	10.152.183.10:53
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Name:	echopod.default.svc.cluster.local
+</span></span><span style="display:flex;"><span>Address: 10.152.183.70
+</span></span></code></pre></div>
+    </div>
+
+    
+        <div class="tags">
+            
+                <a href="https://mauricubo.com/tags/kubernetes">kubernetes</a>
+            
+                <a href="https://mauricubo.com/tags/digitalocean">digitalocean</a>
+            
+                <a href="https://mauricubo.com/tags/do">do</a>
+            
+                <a href="https://mauricubo.com/tags/docker">docker</a>
+            
+                <a href="https://mauricubo.com/tags/terraform">terraform</a>
+            
+                <a href="https://mauricubo.com/tags/flannel">flannel</a>
+            
+        </div>
+    
+    
+    
+
+</section>
+
+
+    </main>
+    
+    <footer id="footer">
+    
+        <div id="social">
+
+
+    <a class="symbol" href="https://github.com/mauricubo/" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28"  viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>Github</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Social-Icons---Rounded-Black" transform="translate(-264.000000, -939.000000)">
+            <g id="Github" transform="translate(264.000000, 939.000000)">
+                <path d="M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z" id="Rounded" fill="#bbbbbb"></path>
+                <path d="M35.9985,13 C22.746,13 12,23.7870921 12,37.096644 C12,47.7406712 18.876,56.7718301 28.4145,59.9584121 C29.6145,60.1797862 30.0525,59.4358488 30.0525,58.7973276 C30.0525,58.2250681 30.0315,56.7100863 30.0195,54.6996482 C23.343,56.1558981 21.9345,51.4693938 21.9345,51.4693938 C20.844,48.6864054 19.2705,47.9454799 19.2705,47.9454799 C17.091,46.4500754 19.4355,46.4801943 19.4355,46.4801943 C21.843,46.6503662 23.1105,48.9634994 23.1105,48.9634994 C25.2525,52.6455377 28.728,51.5823398 30.096,50.9649018 C30.3135,49.4077535 30.9345,48.3460615 31.62,47.7436831 C26.2905,47.1352808 20.688,45.0691228 20.688,35.8361671 C20.688,33.2052792 21.6225,31.0547881 23.1585,29.3696344 C22.911,28.7597262 22.0875,26.3110578 23.3925,22.9934585 C23.3925,22.9934585 25.4085,22.3459017 29.9925,25.4632101 C31.908,24.9285993 33.96,24.6620468 36.0015,24.6515052 C38.04,24.6620468 40.0935,24.9285993 42.0105,25.4632101 C46.5915,22.3459017 48.603,22.9934585 48.603,22.9934585 C49.9125,26.3110578 49.089,28.7597262 48.8415,29.3696344 C50.3805,31.0547881 51.309,33.2052792 51.309,35.8361671 C51.309,45.0917119 45.6975,47.1292571 40.3515,47.7256117 C41.2125,48.4695491 41.9805,49.9393525 41.9805,52.1877301 C41.9805,55.4089489 41.9505,58.0067059 41.9505,58.7973276 C41.9505,59.4418726 42.3825,60.1918338 43.6005,59.9554002 C53.13,56.7627944 60,47.7376593 60,37.096644 C60,23.7870921 49.254,13 35.9985,13" fill="#FFFFFF"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    </a>
+
+    <a class="symbol" href="https://stackoverflow.com/users/10979237" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28" viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>stackoverflow</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Social-Icons---Rounded-Black" transform="translate(-488.000000, -1163.000000)">
+            <g id="stackoverflow" transform="translate(488.000000, 1163.000000)">
+                <path d="M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z" id="Rounded" fill="#bbbbbb"></path>
+                <path d="M42.0860128,53.5922927 L22.9745951,53.6011499 L22.9729497,49.5538824 L42.0835447,49.5440929 L42.0860128,53.5922927 L42.0860128,53.5922927 Z M55,30.6708298 L51.7306912,12 L47.7087256,12.6920259 L50.9775643,31.3628557 L55,30.6708298 L55,30.6708298 Z M42.5455518,44.3547147 L23.5156994,42.616026 L23.1410164,46.6470941 L42.1712214,48.3841513 L42.5455518,44.3547147 L42.5455518,44.3547147 Z M43.8009984,39.0731519 L25.3459811,34.1539179 L24.285633,38.0621508 L42.7419431,42.9819676 L43.8009984,39.0731519 L43.8009984,39.0731519 Z M46.2103463,34.4436411 L29.7494464,24.8164635 L27.6748215,28.3015328 L44.1365441,37.9292931 L46.2103463,34.4436411 L46.2103463,34.4436411 Z M50.2466504,31.6088756 L46.8745036,33.8883189 L36.106599,18.2318456 L39.4792159,15.9517031 L50.2466504,31.6088756 Z M45.3315807,40.2784283 L48.5799693,40.2784283 L48.5799693,60 L17,60 L17,40.2784283 L20.2648427,40.2784283 L20.2648427,56.8243495 L45.3315807,56.8243495 L45.3315807,40.2784283 Z" fill="#FFFFFF"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    </a>
+
+    <a class="symbol" href="https://twitter.com/mauricubo" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="438.536px" height="438.536px" viewBox="0 0 438.536 438.536" style="enable-background:new 0 0 438.536 438.536;"
+	 xml:space="preserve">
+<g>
+	<path d="M414.41,24.123C398.333,8.042,378.963,0,356.315,0H82.228C59.58,0,40.21,8.042,24.126,24.123
+		C8.045,40.207,0.003,59.576,0.003,82.225v274.084c0,22.647,8.042,42.018,24.123,58.102c16.084,16.084,35.454,24.126,58.102,24.126
+		h274.084c22.648,0,42.018-8.042,58.095-24.126c16.084-16.084,24.126-35.454,24.126-58.102V82.225
+		C438.532,59.576,430.49,40.204,414.41,24.123z M335.471,168.735c0.191,1.713,0.288,4.278,0.288,7.71
+		c0,15.989-2.334,32.025-6.995,48.104c-4.661,16.087-11.8,31.504-21.416,46.254c-9.606,14.749-21.074,27.791-34.396,39.115
+		c-13.325,11.32-29.311,20.365-47.968,27.117c-18.648,6.762-38.637,10.143-59.953,10.143c-33.116,0-63.76-8.952-91.931-26.836
+		c4.568,0.568,9.329,0.855,14.275,0.855c27.6,0,52.439-8.565,74.519-25.7c-12.941-0.185-24.506-4.179-34.688-11.991
+		c-10.185-7.803-17.273-17.699-21.271-29.691c4.947,0.76,8.658,1.137,11.132,1.137c4.187,0,9.042-0.76,14.56-2.279
+		c-13.894-2.669-25.598-9.562-35.115-20.697c-9.519-11.136-14.277-23.84-14.277-38.114v-0.571
+		c10.085,4.755,19.602,7.229,28.549,7.422c-17.321-11.613-25.981-28.265-25.981-49.963c0-10.66,2.758-20.747,8.278-30.264
+		c15.035,18.464,33.311,33.213,54.816,44.252c21.507,11.038,44.54,17.227,69.092,18.558c-0.95-3.616-1.427-8.186-1.427-13.704
+		c0-16.562,5.853-30.692,17.56-42.399c11.703-11.706,25.837-17.561,42.394-17.561c17.515,0,32.079,6.283,43.688,18.846
+		c13.134-2.474,25.892-7.33,38.26-14.56c-4.757,14.652-13.613,25.788-26.55,33.402c12.368-1.716,23.88-4.95,34.537-9.708
+		C357.458,149.793,347.462,160.166,335.471,168.735z"/>
+</g>
+</svg>
+
+    </a>
+
+
+</div>
+
+    
+
+    <div class="copyright">
+    
+       © Copyright 
+       2023 
+       <span class="split">
+        <svg fill="#bbbbbb" width="15" height="15" version="1.1" id="heart-15" xmlns="http://www.w3.org/2000/svg" width="15px" height="15px" viewBox="0 0 15 15">
+  <path d="M13.91,6.75c-1.17,2.25-4.3,5.31-6.07,6.94c-0.1903,0.1718-0.4797,0.1718-0.67,0C5.39,12.06,2.26,9,1.09,6.75&#xA;&#x9;C-1.48,1.8,5-1.5,7.5,3.45C10-1.5,16.48,1.8,13.91,6.75z"/>
+</svg>
+       </span>
+       Mauricio Alpuin
+    
+    </div>
+
+    
+      <div class="powerby">
+        Powered by <a href='http://www.gohugo.io/'>Hugo</a> Theme By <a href='https://github.com/nodejh/hugo-theme-mini'>nodejh</a>
+      </div>
+    
+</footer>
+
+
+
+  </body>
+</html>
