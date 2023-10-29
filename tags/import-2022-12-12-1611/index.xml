@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Import 2022-12-12 16:11 on I&#39;m Mauricio Alpuin</title>
+    <link>https://example.org/tags/import-2022-12-12-1611/</link>
+    <description>Recent content in Import 2022-12-12 16:11 on I&#39;m Mauricio Alpuin</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 23 Nov 2022 13:21:25 +0000</lastBuildDate><atom:link href="https://example.org/tags/import-2022-12-12-1611/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Install Netdata on Microk8s</title>
+      <link>https://example.org/posts/install-netdata-on-microk8s/</link>
+      <pubDate>Wed, 23 Nov 2022 13:21:25 +0000</pubDate>
+      
+      <guid>https://example.org/posts/install-netdata-on-microk8s/</guid>
+      <description>This post is a real quick note for myself&amp;hellip;
+I wanted to install netdata to monitoring my homeserver. I think that is the perfect tool for a real time information of your server. When I started to look for the best monitoring tool on the internet, everyone, literally, everyone suggested grafana with prometheus, which I then tried. I think that it is an amaizing tool with a high potential to do whatever you want, but it was not what I was looking for.</description>
+    </item>
+    
+    <item>
+      <title>Pi-Hole - DNS and AdBlocker</title>
+      <link>https://example.org/posts/pi-hole-dns-and-adblocker/</link>
+      <pubDate>Mon, 24 Oct 2022 03:55:59 +0000</pubDate>
+      
+      <guid>https://example.org/posts/pi-hole-dns-and-adblocker/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>My Home Server</title>
+      <link>https://example.org/posts/my-home-server/</link>
+      <pubDate>Mon, 24 Oct 2022 00:03:42 +0000</pubDate>
+      
+      <guid>https://example.org/posts/my-home-server/</guid>
+      <description>I finally decided to buy a mini pc to start playing with some basics things that we don&amp;rsquo;t really need but that are really helpful when you are surfing the web from home. The main reason for doing that was because I&amp;rsquo;m thinking to move my personal blog to my own hosting, MY HOME SERVER.
+Technology/Software that I have used:
+Mini Pc Ubuntu Server 22.04 Microk8s Metallb Heimdall Application Dashboard Here is a diagram of how my home server network and components are working right now.</description>
+    </item>
+    
+    <item>
+      <title>Install Kubernetes from scratch</title>
+      <link>https://example.org/posts/install-kubernetes-from-scratch/</link>
+      <pubDate>Wed, 19 Oct 2022 18:21:33 +0000</pubDate>
+      
+      <guid>https://example.org/posts/install-kubernetes-from-scratch/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Deploy your own hosted Ghost Blog on Kubernetes - Part 2</title>
+      <link>https://example.org/posts/deploy-your-own-hosted-ghost-blog-on-kubernetes-part-2/</link>
+      <pubDate>Mon, 19 Sep 2022 15:36:25 +0000</pubDate>
+      
+      <guid>https://example.org/posts/deploy-your-own-hosted-ghost-blog-on-kubernetes-part-2/</guid>
+      <description>In the first part of this tutorial we have created our kubernetes cluster and have deployed our Ghost Blog accessible over internet. In this second part we are going to be focused on applying an SSL configuration with Letsencrypt in order to publish our website with valid certificates for all users. Step 1 - Install and configure the Cert Manager 🔗Cert Manager is the responsable tool to add, manage and issue the certificates in the Kubernetes cluster.</description>
+    </item>
+    
+    <item>
+      <title>Deploy your own hosted Ghost Blog on Kubernetes - Part 1</title>
+      <link>https://example.org/posts/deploy-your-own-hosted-ghost-blog-on-kubernetes-part-1/</link>
+      <pubDate>Mon, 19 Sep 2022 03:27:18 +0000</pubDate>
+      
+      <guid>https://example.org/posts/deploy-your-own-hosted-ghost-blog-on-kubernetes-part-1/</guid>
+      <description>I&amp;rsquo;ve started to use Ghost as a platform to write my nerdy post, because I would like to use it as my personal notebook, but I want to use it in a good way to contribute to the community as well (because everything is possible googling). But this time, I decided to host my own blog and do all the work from scratch and I want to share what I&amp;rsquo;m learning while doing it.</description>
+    </item>
+    
+  </channel>
+</rss>

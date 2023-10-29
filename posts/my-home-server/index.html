@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <title>My Home Server | I&#39;m Mauricio Alpuin</title>
+
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
+<meta name="viewport" content="width=device-width,minimum-scale=1">
+<meta name="description" content="I finally decided to buy a mini pc to start playing with some basics things that we don&rsquo;t really need but that are really helpful when you are surfing the web from home. The main reason for doing that was because I&rsquo;m thinking to move my personal blog to my own hosting, MY HOME SERVER.
+Technology/Software that I have used:
+Mini Pc Ubuntu Server 22.04 Microk8s Metallb Heimdall Application Dashboard Here is a diagram of how my home server network and components are working right now.">
+<meta name="generator" content="Hugo 0.118.2">
+
+
+  <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link rel="shortcut icon" href="/images/favico.icon.png" type="image/x-icon" />
+
+
+
+
+
+
+
+
+  </head>
+
+  <body>
+    <nav class="navigation">
+	
+		<a href="/"> <span class="arrow">←</span>Home</a>
+	
+	<a href="/posts">Archive</a>
+	<a href="/tags">Tags</a>
+	<a href="/about">About</a>
+
+	
+
+	
+</nav>
+
+
+    <main class="main">
+      
+
+<section id="single">
+    <h1 class="title">My Home Server</h1>
+
+    <div class="tip">
+        <time datetime="2022-10-24 00:03:42 &#43;0000 UTC">Oct 24, 2022</time>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          1540 words
+        </span>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          8 minute read
+        </span>
+    </div>
+
+    
+    
+
+
+    <div class="content">
+      <p>I finally decided to buy a mini pc to start playing with some basics things that we don&rsquo;t really need but that are really helpful when you are surfing the web from home. The main reason for doing that was because I&rsquo;m thinking to move my personal blog to my own hosting, MY HOME SERVER.</p>
+<p>Technology/Software that I have used:</p>
+<ol>
+<li>Mini Pc</li>
+<li>Ubuntu Server 22.04</li>
+<li>Microk8s</li>
+<li>Metallb</li>
+<li>Heimdall Application Dashboard</li>
+</ol>
+<p>Here is a diagram of how my home server network and components are working right now.</p>
+<p><p class="markdown-image">
+  <img src="/images/post4/home_network_diagram.jpg" alt=""  />
+</p></p>
+<p>Actually I&rsquo;m using a dedicated firewall, but the commercial routers/modems already have all the functions.</p>
+<p>So&hellip; Let&rsquo;s start</p>
+<hr>
+<h2 id="uthe-mini-pcu"><!-- raw HTML omitted -->The Mini PC<!-- raw HTML omitted --> <a href="#uthe-mini-pcu" class="anchor">🔗</a></h2><p>I did some research about mini pcs and the raspberry pi (I was really tempted about a raspberry pi cluster idea. <a href="https://www.raspberrypi.com/tutorials/cluster-raspberry-pi-tutorial/" target="_blank" rel="noopener">link here</a>) looking and comparing prices and models available. Finally I decided to buy the <a href="https://www.amazon.com/-/es/LarkBox-Pro-computadora-escritorio-Streaming/dp/B08KCZPQ3P?th=1" target="_blank" rel="noopener"><code>CHUWI LarkBox Pro Mini PC</code></a> to start  the game. After testing it for a while I&rsquo;ll decide if I move to another solution or if I continue with this line (buying more of this mini pcs).</p>
+<p>I&rsquo;m going to show you a real picture so you can see the dimensions of this small thing.</p>
+<p><p class="markdown-image">
+  <img src="/images/post4/Chuwi.jpg" alt=""  />
+</p></p>
+<p>That little thing comes with <em>6Gb RAM, 128Gb SSD, Intel® Celeron® J4125 Quad Core, and Windows 10 installed</em> by default and runs perfectly on that hardware, of course we are not going to using it as the operating system for a personal server, but I think that this small thing can be used as a personal computer without any problems. There&rsquo;s only one bad thing about this PC, and I think that&rsquo;s because it&rsquo;s designed to be small, but it doesn&rsquo;t have an Ethernet Port to connect to the network. If you want to connect the Mini PC directly to the switch you have to think about buying a USB adapter or use it while connected to the Wifi (supports 2.4G and 5G), which works perfectly.</p>
+<h2 id="the-operating-system">The Operating System <a href="#the-operating-system" class="anchor">🔗</a></h2><p>I didn&rsquo;t want to complicate the things too much, because I was thinking to install <code>microk8s</code>, I decided to install <code>Ubuntu 22.04</code> as the server operating system. It&rsquo;s a really good operating system, I feel comfortable with Ubuntu and I didn&rsquo;t need so much customization to run Kubernetes. I&rsquo;m not going to explain the step-by-step installation, but I basically copied the image into a pendrive and modified the <code>/etc/netplan/00-installer-config-wifi.yaml</code></p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#080;font-style:italic"># cat /etc/netplan/00-installer-config-wifi.yaml</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#080;font-style:italic"># This is the network config written by &#39;subiquity&#39;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">network</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">version</span>:<span style="color:#bbb"> </span><span style="color:#666">2</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">wifis</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#008000;font-weight:bold">wlan0</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#008000;font-weight:bold">access-points</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#008000;font-weight:bold">&lt;your_wifi_network_name_here&gt;</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span><span style="color:#008000;font-weight:bold">password</span>:<span style="color:#bbb"> </span>&lt;your_wifi_password_here&gt;<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#008000;font-weight:bold">dhcp4</span>:<span style="color:#bbb"> </span><span style="color:#a2f;font-weight:bold">false</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#008000;font-weight:bold">addresses</span>:<span style="color:#bbb"> </span>[&lt;the_minipc_ip_address/24]<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#008000;font-weight:bold">nameservers</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span><span style="color:#008000;font-weight:bold">addresses</span>:<span style="color:#bbb"> </span>[<span style="color:#666">8.8.8.8</span>,<span style="color:#666">8.8.4.4</span>]<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#008000;font-weight:bold">routes</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span>- <span style="color:#008000;font-weight:bold">to</span>:<span style="color:#bbb"> </span>default<span style="color:#bbb"> </span><span style="color:#080;font-style:italic"># could be 0/0 or 0.0.0.0/0 optionally</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span><span style="color:#008000;font-weight:bold">via</span>:<span style="color:#bbb"> </span>&lt;your_default_gw&gt;<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span><span style="color:#008000;font-weight:bold">metric</span>:<span style="color:#bbb"> </span><span style="color:#666">100</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span><span style="color:#008000;font-weight:bold">on-link</span>:<span style="color:#bbb"> </span><span style="color:#a2f;font-weight:bold">true</span><span style="color:#bbb">
+</span></span></span></code></pre></div><p>The operating system version:</p>
+<p><p class="markdown-image">
+  <img src="/images/post4/ubuntu_capture.jpg" alt=""  />
+</p></p>
+<h2 id="microk8s">Microk8s <a href="#microk8s" class="anchor">🔗</a></h2><p>It&rsquo;s an opensource software to manage the <code>kubernetes</code> installation and administration (you can see the kubeadm way in my <a href="/posts/install-kubernetes-from-scratch/">other post here</a>). It&rsquo;s really simple to install and wrap the installation of many add-ons so you can easily install or uninstall these features in the future without doing it from scratch. It&rsquo;s a tool that you can use for small production environments.</p>
+<p><a href="http://microk8s.io/" target="_blank" rel="noopener">MicroK8s - Zero-ops Kubernetes for developers, edge and IoT | MicroK8s</a></p>
+<p>We install microk8s service on the server</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ sudo snap install microk8s --classic
+</span></span><span style="display:flex;"><span>microk8s <span style="color:#666">(</span>1.25/stable<span style="color:#666">)</span> v1.25.3 from Canonical✓ installed
+</span></span></code></pre></div><p>We add the user to the microk8s group to manage the kubernetes</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ sudo usermod -a -G microk8s <span style="color:#b8860b">$USER</span>
+</span></span><span style="display:flex;"><span>$ sudo chown -f -R <span style="color:#b8860b">$USER</span> ~/.kube
+</span></span><span style="display:flex;"><span>$ su - <span style="color:#b8860b">$USER</span>
+</span></span><span style="display:flex;"><span>Password:
+</span></span></code></pre></div><p>We check the status of the installation</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ microk8s status --wait-ready
+</span></span><span style="display:flex;"><span>microk8s is running
+</span></span><span style="display:flex;"><span>high-availability: no
+</span></span><span style="display:flex;"><span>  datastore master nodes: 127.0.0.1:19001
+</span></span><span style="display:flex;"><span>  datastore standby nodes: none
+</span></span><span style="display:flex;"><span>addons:
+</span></span><span style="display:flex;"><span>  enabled:
+</span></span><span style="display:flex;"><span>    ha-cluster           <span style="color:#080;font-style:italic"># (core) Configure high availability on the current node</span>
+</span></span><span style="display:flex;"><span>    helm                 <span style="color:#080;font-style:italic"># (core) Helm - the package manager for Kubernetes</span>
+</span></span><span style="display:flex;"><span>    helm3                <span style="color:#080;font-style:italic"># (core) Helm 3 - the package manager for Kubernetes</span>
+</span></span><span style="display:flex;"><span>  disabled:
+</span></span><span style="display:flex;"><span>  ...
+</span></span></code></pre></div><p>Create an alias to <code>kubectl</code> and configure the autocompletion</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ <span style="color:#a2f">alias</span> <span style="color:#b8860b">kubectl</span><span style="color:#666">=</span><span style="color:#b44">&#39;microk8s kubectl&#39;</span>
+</span></span><span style="display:flex;"><span>$ <span style="color:#a2f">echo</span> <span style="color:#b44">&#39;source &lt;(kubectl completion bash)&#39;</span> &gt;&gt;~/.bashrc
+</span></span><span style="display:flex;"><span>$ <span style="color:#a2f">echo</span> <span style="color:#b44">&#39;alias k=kubectl&#39;</span> &gt;&gt;~/.bashrc
+</span></span><span style="display:flex;"><span>$ <span style="color:#a2f">echo</span> <span style="color:#b44">&#39;complete -o default -F __start_kubectl k&#39;</span> &gt;&gt;~/.bashrc
+</span></span><span style="display:flex;"><span>$ <span style="color:#a2f">source</span>  ~/.bashrc
+</span></span></code></pre></div><p>We test it</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ k create deployment nginx --image<span style="color:#666">=</span>nginx
+</span></span><span style="display:flex;"><span>deployment.apps/nginx created
+</span></span><span style="display:flex;"><span>$ k get pods
+</span></span><span style="display:flex;"><span>NAME                    READY   STATUS    RESTARTS   AGE
+</span></span><span style="display:flex;"><span>nginx-76d6c9b8c-dkwz6   1/1     Running   <span style="color:#666">0</span>          60s
+</span></span></code></pre></div><p>Everything is working perfectly&hellip;</p>
+<p>Ok, now we have a single node cluster of <code>kubernetes</code> managed by the <code>microk8s</code>, we can add or remove more nodes only with the join command. But that&rsquo;s material for a future post&hellip;. for now I&rsquo;m using one of the mini pcs only to see how it is working as a personal server.</p>
+<hr>
+<h2 id="metallb---the-bare-metal-load-balancer">Metallb - The Bare Metal Load Balancer <a href="#metallb---the-bare-metal-load-balancer" class="anchor">🔗</a></h2><p>When we install <code>kubernetes</code> on Bare Metal solutions (means that you are using your own infrastructure, it&rsquo;s dedicated, different like cloud environments for example), we don&rsquo;t have a default load balancer to redirect the traffic between the nodes on a same network. Most of the cloud providers have a default integration with this part of the cluster that allows you to configure the ingress and create a load balancer that points to your nodes of the cluster.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ microk8s <span style="color:#a2f">enable</span> metallb:&lt;start_ip_range&gt;-&lt;end_ip_range&gt;
+</span></span><span style="display:flex;"><span>Infer repository core <span style="color:#a2f;font-weight:bold">for</span> addon metallb
+</span></span><span style="display:flex;"><span>Enabling MetalLB
+</span></span><span style="display:flex;"><span>Applying Metallb manifest
+</span></span><span style="display:flex;"><span>customresourcedefinition.apiextensions.k8s.io/addresspools.metallb.io created
+</span></span><span style="display:flex;"><span>customresourcedefinition.apiextensions.k8s.io/bfdprofiles.metallb.io created
+</span></span><span style="display:flex;"><span>customresourcedefinition.apiextensions.k8s.io/bgpadvertisements.metallb.io created
+</span></span><span style="display:flex;"><span>customresourcedefinition.apiextensions.k8s.io/bgppeers.metallb.io created
+</span></span><span style="display:flex;"><span>customresourcedefinition.apiextensions.k8s.io/communities.metallb.io created
+</span></span><span style="display:flex;"><span>customresourcedefinition.apiextensions.k8s.io/ipaddresspools.metallb.io created
+</span></span><span style="display:flex;"><span>customresourcedefinition.apiextensions.k8s.io/l2advertisements.metallb.io created
+</span></span><span style="display:flex;"><span>namespace/metallb-system created
+</span></span><span style="display:flex;"><span>serviceaccount/controller created
+</span></span><span style="display:flex;"><span>serviceaccount/speaker created
+</span></span><span style="display:flex;"><span>clusterrole.rbac.authorization.k8s.io/metallb-system:controller created
+</span></span><span style="display:flex;"><span>clusterrole.rbac.authorization.k8s.io/metallb-system:speaker created
+</span></span><span style="display:flex;"><span>role.rbac.authorization.k8s.io/controller created
+</span></span><span style="display:flex;"><span>role.rbac.authorization.k8s.io/pod-lister created
+</span></span><span style="display:flex;"><span>clusterrolebinding.rbac.authorization.k8s.io/metallb-system:controller created
+</span></span><span style="display:flex;"><span>clusterrolebinding.rbac.authorization.k8s.io/metallb-system:speaker created
+</span></span><span style="display:flex;"><span>rolebinding.rbac.authorization.k8s.io/controller created
+</span></span><span style="display:flex;"><span>secret/webhook-server-cert created
+</span></span><span style="display:flex;"><span>service/webhook-service created
+</span></span><span style="display:flex;"><span>rolebinding.rbac.authorization.k8s.io/pod-lister created
+</span></span><span style="display:flex;"><span>daemonset.apps/speaker created
+</span></span><span style="display:flex;"><span>deployment.apps/controller created
+</span></span><span style="display:flex;"><span>validatingwebhookconfiguration.admissionregistration.k8s.io/validating-webhook-configuration created
+</span></span><span style="display:flex;"><span>Waiting <span style="color:#a2f;font-weight:bold">for</span> Metallb controller to be ready.
+</span></span><span style="display:flex;"><span>deployment.apps/controller condition met
+</span></span><span style="display:flex;"><span>ipaddresspool.metallb.io/default-addresspool created
+</span></span><span style="display:flex;"><span>l2advertisement.metallb.io/default-advertise-all-pools created
+</span></span><span style="display:flex;"><span>MetalLB is enabled
+</span></span></code></pre></div><p>Now we are going to configure the <code>metallb</code> with the <code>layer2</code> config, it&rsquo;s not the best configuration for a node failure but it&rsquo;s the easiest configuration and it&rsquo;s going to work anyway but it&rsquo;s going to take longer to pass the IP address to the active node. In my case, as I have just one node, it&rsquo;s not going to be a problem. This is our <code>metallb.yaml</code> configuration to set the IP range in the kubernetes config. I&rsquo;m using the IPs of my local network, the same that I assign to the host to be part of the network.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#00f;font-weight:bold">---</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>metallb.io/v1beta1<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>IPAddressPool<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">metadata</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">name</span>:<span style="color:#bbb"> </span>default-addresspool<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">namespace</span>:<span style="color:#bbb"> </span>metallb-system<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">spec</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">addresses</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span>- <span style="color:#666">10.116.0.10-10.116.0.15</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">autoAssign</span>:<span style="color:#bbb"> </span><span style="color:#a2f;font-weight:bold">true</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#00f;font-weight:bold">---</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>metallb.io/v1beta1<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>L2Advertisement<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">metadata</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">name</span>:<span style="color:#bbb"> </span>default<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">namespace</span>:<span style="color:#bbb"> </span>metallb-system<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">spec</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">ipAddressPools</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span>- default<span style="color:#bbb">
+</span></span></span></code></pre></div><p>We apply the configuration.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ kubectl apply -f metallb.yaml
+</span></span><span style="display:flex;"><span>ipaddresspool.metallb.io/default-addresspool configured
+</span></span><span style="display:flex;"><span>l2advertisement.metallb.io/default created
+</span></span></code></pre></div><hr>
+<h2 id="heimdall-application-dashboard">Heimdall Application Dashboard <a href="#heimdall-application-dashboard" class="anchor">🔗</a></h2><p>Now that we have our cluster ready, lets install our first application. There are many good projects on github ready to be installed and free to use that it was hard to chose with which one I should start. I finally decided to start with a dashboard, an application with which I can centralize my existing applications and link the future ones to.</p>
+<p><a href="https://heimdall.site" target="_blank" rel="noopener">The Heimdall Application Dashboard makes managing your websites and applications much easier.</a></p>
+<p>So, let&rsquo;s take a look at the steps that we need to deploy the app on our new cluster.</p>
+<ol>
+<li>Enable the NGINX Ingress Controller</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ microk8s <span style="color:#a2f">enable</span> ingress dns
+</span></span><span style="display:flex;"><span>Infer repository core <span style="color:#a2f;font-weight:bold">for</span> addon ingress
+</span></span><span style="display:flex;"><span>Enabling Ingress
+</span></span><span style="display:flex;"><span>ingressclass.networking.k8s.io/public created
+</span></span><span style="display:flex;"><span>ingressclass.networking.k8s.io/nginx created
+</span></span><span style="display:flex;"><span>namespace/ingress created
+</span></span><span style="display:flex;"><span>serviceaccount/nginx-ingress-microk8s-serviceaccount created
+</span></span><span style="display:flex;"><span>clusterrole.rbac.authorization.k8s.io/nginx-ingress-microk8s-clusterrole created
+</span></span></code></pre></div><ol start="2">
+<li>Map and expose our <code>ingress controller</code> with the already configured <code>Metallb</code>. We can do that using a <code>Service</code>. You can use your own ports here, but I&rsquo;m using the default port for the HTTP because I assign a dedicated IP from my network.</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#008000;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>v1<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Service<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">metadata</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">name</span>:<span style="color:#bbb"> </span>ingress<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">namespace</span>:<span style="color:#bbb"> </span>ingress<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">annotations</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#008000;font-weight:bold">metallb.universe.tf/address-pool</span>:<span style="color:#bbb"> </span>default-addresspool<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">spec</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">ports</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span>- <span style="color:#008000;font-weight:bold">port</span>:<span style="color:#bbb"> </span><span style="color:#666">80</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#008000;font-weight:bold">targetPort</span>:<span style="color:#bbb"> </span><span style="color:#666">80</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#008000;font-weight:bold">protocol</span>:<span style="color:#bbb"> </span>TCP<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#008000;font-weight:bold">name</span>:<span style="color:#bbb"> </span>http<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span>- <span style="color:#008000;font-weight:bold">port</span>:<span style="color:#bbb"> </span><span style="color:#666">443</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#008000;font-weight:bold">targetPort</span>:<span style="color:#bbb"> </span><span style="color:#666">443</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#008000;font-weight:bold">protocol</span>:<span style="color:#bbb"> </span>TCP<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#008000;font-weight:bold">name</span>:<span style="color:#bbb"> </span>https<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">selector</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#008000;font-weight:bold">name</span>:<span style="color:#bbb"> </span>nginx-ingress-microk8s<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">type</span>:<span style="color:#bbb"> </span>LoadBalancer<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">loadBalancerIP</span>:<span style="color:#bbb"> </span><span style="color:#666">10.116.0.11</span><span style="color:#bbb">
+</span></span></span></code></pre></div><p>We apply the configuration.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ kubectl apply -f nginx.yaml
+</span></span><span style="display:flex;"><span>service/ingress created
+</span></span></code></pre></div><ol start="3">
+<li>Deployment file for the app.</li>
+</ol>
+<p>We have the following components:</p>
+<ul>
+<li><em><strong>Deployment</strong></em>: Contains the specifications that our pod need to run inside the cluster.</li>
+<li><em><strong>Service</strong></em>: Publishes our pod ports inside the cluster to be accessible.</li>
+<li><em><strong>Ingress</strong></em>: Publishes our application using our nginx ingress controller and assigns a domain name and configuration rules.</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#008000;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>v1<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Namespace<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">metadata</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">name</span>:<span style="color:#bbb"> </span>heimdall<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#00f;font-weight:bold">---</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>apps/v1<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Deployment<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">metadata</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">name</span>:<span style="color:#bbb"> </span>heimdall<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">namespace</span>:<span style="color:#bbb"> </span>heimdall<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">spec</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">selector</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#008000;font-weight:bold">matchLabels</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#008000;font-weight:bold">app</span>:<span style="color:#bbb"> </span>heimdall<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">template</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#008000;font-weight:bold">metadata</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#008000;font-weight:bold">labels</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#008000;font-weight:bold">app</span>:<span style="color:#bbb"> </span>heimdall<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#008000;font-weight:bold">spec</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#008000;font-weight:bold">containers</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span>- <span style="color:#008000;font-weight:bold">name</span>:<span style="color:#bbb"> </span>heimdall<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#008000;font-weight:bold">image</span>:<span style="color:#bbb"> </span>linuxserver/heimdall:latest<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#008000;font-weight:bold">ports</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>- <span style="color:#008000;font-weight:bold">containerPort</span>:<span style="color:#bbb"> </span><span style="color:#666">80</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span><span style="color:#008000;font-weight:bold">name</span>:<span style="color:#bbb"> </span>heimdallweb<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span><span style="color:#008000;font-weight:bold">protocol</span>:<span style="color:#bbb"> </span>TCP<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#008000;font-weight:bold">env</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span>- <span style="color:#008000;font-weight:bold">name</span>:<span style="color:#bbb"> </span><span style="color:#b44">&#39;TZ&#39;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span><span style="color:#008000;font-weight:bold">value</span>:<span style="color:#bbb"> </span><span style="color:#b44">&#39;America/Lima&#39;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span>- <span style="color:#008000;font-weight:bold">name</span>:<span style="color:#bbb"> </span><span style="color:#b44">&#39;PUID&#39;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span><span style="color:#008000;font-weight:bold">value</span>:<span style="color:#bbb"> </span><span style="color:#b44">&#39;1000&#39;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span>- <span style="color:#008000;font-weight:bold">name</span>:<span style="color:#bbb"> </span><span style="color:#b44">&#39;PGID&#39;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span><span style="color:#008000;font-weight:bold">value</span>:<span style="color:#bbb"> </span><span style="color:#b44">&#39;1000&#39;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#008000;font-weight:bold">volumeMounts</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span>- <span style="color:#008000;font-weight:bold">mountPath</span>:<span style="color:#bbb"> </span><span style="color:#b44">&#39;/config&#39;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span><span style="color:#008000;font-weight:bold">name</span>:<span style="color:#bbb"> </span>heimdall-config<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#008000;font-weight:bold">volumes</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>- <span style="color:#008000;font-weight:bold">name</span>:<span style="color:#bbb"> </span>heimdall-config<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span><span style="color:#008000;font-weight:bold">hostPath</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span><span style="color:#008000;font-weight:bold">path</span>:<span style="color:#bbb"> </span>/app/kubernetes/heimdall/config<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#00f;font-weight:bold">---</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>v1<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Service<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">metadata</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">name</span>:<span style="color:#bbb"> </span>heimdallservice-web<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">namespace</span>:<span style="color:#bbb"> </span>heimdall<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">spec</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">selector</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#008000;font-weight:bold">app</span>:<span style="color:#bbb"> </span>heimdall<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">ports</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span>- <span style="color:#008000;font-weight:bold">port</span>:<span style="color:#bbb"> </span><span style="color:#666">80</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#008000;font-weight:bold">targetPort</span>:<span style="color:#bbb"> </span>heimdallweb<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#008000;font-weight:bold">protocol</span>:<span style="color:#bbb"> </span>TCP<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#00f;font-weight:bold">---</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>networking.k8s.io/v1<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Ingress<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">metadata</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">name</span>:<span style="color:#bbb"> </span>heimdall-ingress<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">namespace</span>:<span style="color:#bbb"> </span>heimdall<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">labels</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#008000;font-weight:bold">app</span>:<span style="color:#bbb"> </span>home-ingress<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">annotations</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#008000;font-weight:bold">nginx.ingress.kubernetes.io/rewrite-target</span>:<span style="color:#bbb"> </span>/<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008000;font-weight:bold">spec</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">ingressClassName</span>:<span style="color:#bbb"> </span>nginx<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#008000;font-weight:bold">rules</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span>- <span style="color:#008000;font-weight:bold">host</span>:<span style="color:#bbb"> </span><span style="color:#b44">&#34;heimdall.mauricubo.com&#34;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#008000;font-weight:bold">http</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#008000;font-weight:bold">paths</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span>- <span style="color:#008000;font-weight:bold">pathType</span>:<span style="color:#bbb"> </span>Prefix<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#008000;font-weight:bold">path</span>:<span style="color:#bbb"> </span>/<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#008000;font-weight:bold">backend</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span><span style="color:#008000;font-weight:bold">service</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span><span style="color:#008000;font-weight:bold">name</span>:<span style="color:#bbb"> </span>heimdallservice-web<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span><span style="color:#008000;font-weight:bold">port</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">              </span><span style="color:#008000;font-weight:bold">number</span>:<span style="color:#bbb"> </span><span style="color:#666">80</span><span style="color:#bbb">
+</span></span></span></code></pre></div><p>We apply the configuration. Of course you can change the parameters that we are using here, for example the domain name or the port.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ kubectl apply -f heimdall.yaml
+</span></span><span style="display:flex;"><span>namespace/heimdall created
+</span></span><span style="display:flex;"><span>deployment.apps/heimdall created
+</span></span><span style="display:flex;"><span>service/heimdallservice-web created
+</span></span><span style="display:flex;"><span>ingress.networking.k8s.io/heimdall-ingress created
+</span></span></code></pre></div><p>And finally&hellip; We test it&hellip;</p>
+<p><p class="markdown-image">
+  <img src="/images/post4/Heimdall_installed.jpg" alt=""  />
+</p></p>
+<hr>
+<p>We already have configured the base for what we can deploy in the future. In my next posts I&rsquo;m going to deploy more applications and we are going to see how this configuration can be used as a base for almost any new deployment on our new kubernetes cluster.</p>
+
+    </div>
+
+    
+        <div class="tags">
+            
+                <a href="https://mauricubo.com/tags/heimdall">heimdall</a>
+            
+                <a href="https://mauricubo.com/tags/kubernetes">kubernetes</a>
+            
+                <a href="https://mauricubo.com/tags/microk8s">microk8s</a>
+            
+                <a href="https://mauricubo.com/tags/metallb">metallb</a>
+            
+                <a href="https://mauricubo.com/tags/ubuntu">ubuntu</a>
+            
+                <a href="https://mauricubo.com/tags/pihole">pihole</a>
+            
+                <a href="https://mauricubo.com/tags/pi-hole">pi-hole</a>
+            
+        </div>
+    
+    
+    
+
+</section>
+
+
+    </main>
+    
+    <footer id="footer">
+    
+        <div id="social">
+
+
+    <a class="symbol" href="https://github.com/mauricubo/" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28"  viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>Github</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Social-Icons---Rounded-Black" transform="translate(-264.000000, -939.000000)">
+            <g id="Github" transform="translate(264.000000, 939.000000)">
+                <path d="M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z" id="Rounded" fill="#bbbbbb"></path>
+                <path d="M35.9985,13 C22.746,13 12,23.7870921 12,37.096644 C12,47.7406712 18.876,56.7718301 28.4145,59.9584121 C29.6145,60.1797862 30.0525,59.4358488 30.0525,58.7973276 C30.0525,58.2250681 30.0315,56.7100863 30.0195,54.6996482 C23.343,56.1558981 21.9345,51.4693938 21.9345,51.4693938 C20.844,48.6864054 19.2705,47.9454799 19.2705,47.9454799 C17.091,46.4500754 19.4355,46.4801943 19.4355,46.4801943 C21.843,46.6503662 23.1105,48.9634994 23.1105,48.9634994 C25.2525,52.6455377 28.728,51.5823398 30.096,50.9649018 C30.3135,49.4077535 30.9345,48.3460615 31.62,47.7436831 C26.2905,47.1352808 20.688,45.0691228 20.688,35.8361671 C20.688,33.2052792 21.6225,31.0547881 23.1585,29.3696344 C22.911,28.7597262 22.0875,26.3110578 23.3925,22.9934585 C23.3925,22.9934585 25.4085,22.3459017 29.9925,25.4632101 C31.908,24.9285993 33.96,24.6620468 36.0015,24.6515052 C38.04,24.6620468 40.0935,24.9285993 42.0105,25.4632101 C46.5915,22.3459017 48.603,22.9934585 48.603,22.9934585 C49.9125,26.3110578 49.089,28.7597262 48.8415,29.3696344 C50.3805,31.0547881 51.309,33.2052792 51.309,35.8361671 C51.309,45.0917119 45.6975,47.1292571 40.3515,47.7256117 C41.2125,48.4695491 41.9805,49.9393525 41.9805,52.1877301 C41.9805,55.4089489 41.9505,58.0067059 41.9505,58.7973276 C41.9505,59.4418726 42.3825,60.1918338 43.6005,59.9554002 C53.13,56.7627944 60,47.7376593 60,37.096644 C60,23.7870921 49.254,13 35.9985,13" fill="#FFFFFF"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    </a>
+
+    <a class="symbol" href="https://stackoverflow.com/users/10979237" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28" viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>stackoverflow</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Social-Icons---Rounded-Black" transform="translate(-488.000000, -1163.000000)">
+            <g id="stackoverflow" transform="translate(488.000000, 1163.000000)">
+                <path d="M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z" id="Rounded" fill="#bbbbbb"></path>
+                <path d="M42.0860128,53.5922927 L22.9745951,53.6011499 L22.9729497,49.5538824 L42.0835447,49.5440929 L42.0860128,53.5922927 L42.0860128,53.5922927 Z M55,30.6708298 L51.7306912,12 L47.7087256,12.6920259 L50.9775643,31.3628557 L55,30.6708298 L55,30.6708298 Z M42.5455518,44.3547147 L23.5156994,42.616026 L23.1410164,46.6470941 L42.1712214,48.3841513 L42.5455518,44.3547147 L42.5455518,44.3547147 Z M43.8009984,39.0731519 L25.3459811,34.1539179 L24.285633,38.0621508 L42.7419431,42.9819676 L43.8009984,39.0731519 L43.8009984,39.0731519 Z M46.2103463,34.4436411 L29.7494464,24.8164635 L27.6748215,28.3015328 L44.1365441,37.9292931 L46.2103463,34.4436411 L46.2103463,34.4436411 Z M50.2466504,31.6088756 L46.8745036,33.8883189 L36.106599,18.2318456 L39.4792159,15.9517031 L50.2466504,31.6088756 Z M45.3315807,40.2784283 L48.5799693,40.2784283 L48.5799693,60 L17,60 L17,40.2784283 L20.2648427,40.2784283 L20.2648427,56.8243495 L45.3315807,56.8243495 L45.3315807,40.2784283 Z" fill="#FFFFFF"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    </a>
+
+    <a class="symbol" href="https://twitter.com/mauricubo" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="438.536px" height="438.536px" viewBox="0 0 438.536 438.536" style="enable-background:new 0 0 438.536 438.536;"
+	 xml:space="preserve">
+<g>
+	<path d="M414.41,24.123C398.333,8.042,378.963,0,356.315,0H82.228C59.58,0,40.21,8.042,24.126,24.123
+		C8.045,40.207,0.003,59.576,0.003,82.225v274.084c0,22.647,8.042,42.018,24.123,58.102c16.084,16.084,35.454,24.126,58.102,24.126
+		h274.084c22.648,0,42.018-8.042,58.095-24.126c16.084-16.084,24.126-35.454,24.126-58.102V82.225
+		C438.532,59.576,430.49,40.204,414.41,24.123z M335.471,168.735c0.191,1.713,0.288,4.278,0.288,7.71
+		c0,15.989-2.334,32.025-6.995,48.104c-4.661,16.087-11.8,31.504-21.416,46.254c-9.606,14.749-21.074,27.791-34.396,39.115
+		c-13.325,11.32-29.311,20.365-47.968,27.117c-18.648,6.762-38.637,10.143-59.953,10.143c-33.116,0-63.76-8.952-91.931-26.836
+		c4.568,0.568,9.329,0.855,14.275,0.855c27.6,0,52.439-8.565,74.519-25.7c-12.941-0.185-24.506-4.179-34.688-11.991
+		c-10.185-7.803-17.273-17.699-21.271-29.691c4.947,0.76,8.658,1.137,11.132,1.137c4.187,0,9.042-0.76,14.56-2.279
+		c-13.894-2.669-25.598-9.562-35.115-20.697c-9.519-11.136-14.277-23.84-14.277-38.114v-0.571
+		c10.085,4.755,19.602,7.229,28.549,7.422c-17.321-11.613-25.981-28.265-25.981-49.963c0-10.66,2.758-20.747,8.278-30.264
+		c15.035,18.464,33.311,33.213,54.816,44.252c21.507,11.038,44.54,17.227,69.092,18.558c-0.95-3.616-1.427-8.186-1.427-13.704
+		c0-16.562,5.853-30.692,17.56-42.399c11.703-11.706,25.837-17.561,42.394-17.561c17.515,0,32.079,6.283,43.688,18.846
+		c13.134-2.474,25.892-7.33,38.26-14.56c-4.757,14.652-13.613,25.788-26.55,33.402c12.368-1.716,23.88-4.95,34.537-9.708
+		C357.458,149.793,347.462,160.166,335.471,168.735z"/>
+</g>
+</svg>
+
+    </a>
+
+
+</div>
+
+    
+
+    <div class="copyright">
+    
+       © Copyright 
+       2023 
+       <span class="split">
+        <svg fill="#bbbbbb" width="15" height="15" version="1.1" id="heart-15" xmlns="http://www.w3.org/2000/svg" width="15px" height="15px" viewBox="0 0 15 15">
+  <path d="M13.91,6.75c-1.17,2.25-4.3,5.31-6.07,6.94c-0.1903,0.1718-0.4797,0.1718-0.67,0C5.39,12.06,2.26,9,1.09,6.75&#xA;&#x9;C-1.48,1.8,5-1.5,7.5,3.45C10-1.5,16.48,1.8,13.91,6.75z"/>
+</svg>
+       </span>
+       Mauricio Alpuin
+    
+    </div>
+
+    
+      <div class="powerby">
+        Powered by <a href='http://www.gohugo.io/'>Hugo</a> Theme By <a href='https://github.com/nodejh/hugo-theme-mini'>nodejh</a>
+      </div>
+    
+</footer>
+
+
+
+  </body>
+</html>

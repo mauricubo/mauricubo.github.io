@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>docker-compose on I&#39;m Mauricio Alpuin</title>
+    <link>https://mauricubo.com/tags/docker-compose/</link>
+    <description>Recent content in docker-compose on I&#39;m Mauricio Alpuin</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 10 Feb 2023 13:58:00 +0000</lastBuildDate><atom:link href="https://mauricubo.com/tags/docker-compose/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Journey from your laptop to a CI/CD to Kubernetes</title>
+      <link>https://mauricubo.com/posts/journey-from-your-laptop-to-a-ci/cd-to-kubernetes/</link>
+      <pubDate>Fri, 10 Feb 2023 13:58:00 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/posts/journey-from-your-laptop-to-a-ci/cd-to-kubernetes/</guid>
+      <description>In today&amp;rsquo;s post I want to write something that came to my mind when I was trying to write code. In particular I was trying to remember how to write code again, so I started to write some kind of API with Flask.
+Many people love Flask for its simplicity and I wanted to give it a try to see how easy it was to create a functional API from scratch.</description>
+    </item>
+    
+  </channel>
+</rss>

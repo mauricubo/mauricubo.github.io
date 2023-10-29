@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>pi-hole on I&#39;m Mauricio Alpuin</title>
+    <link>https://mauricubo.com/categories/pi-hole/</link>
+    <description>Recent content in pi-hole on I&#39;m Mauricio Alpuin</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 24 Oct 2022 03:55:59 +0000</lastBuildDate><atom:link href="https://mauricubo.com/categories/pi-hole/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Pi-Hole - DNS and AdBlocker</title>
+      <link>https://mauricubo.com/posts/pi-hole-dns-and-adblocker/</link>
+      <pubDate>Mon, 24 Oct 2022 03:55:59 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/posts/pi-hole-dns-and-adblocker/</guid>
+      <description>This application was the first one that I wanted to try when I installed and configured my personal server. As I wrote in my last post, I&amp;rsquo;ve installed and configured a personal server at home to run some applications for my personal use, so my next step was this really popular application pi-hole.
+pi-hole is an opensource and free software that offers a DNS, DHCP and an incredible Ad-blocker (it has other additional functions but the ones that I mention are the core).</description>
+    </item>
+    
+    <item>
+      <title>My Home Server</title>
+      <link>https://mauricubo.com/posts/my-home-server/</link>
+      <pubDate>Mon, 24 Oct 2022 00:03:42 +0000</pubDate>
+      
+      <guid>https://mauricubo.com/posts/my-home-server/</guid>
+      <description>I finally decided to buy a mini pc to start playing with some basics things that we don&amp;rsquo;t really need but that are really helpful when you are surfing the web from home. The main reason for doing that was because I&amp;rsquo;m thinking to move my personal blog to my own hosting, MY HOME SERVER.
+Technology/Software that I have used:
+Mini Pc Ubuntu Server 22.04 Microk8s Metallb Heimdall Application Dashboard Here is a diagram of how my home server network and components are working right now.</description>
+    </item>
+    
+  </channel>
+</rss>
