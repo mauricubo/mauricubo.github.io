@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>do on I&#39;m Mauricio Alpuin</title>
-    <link>https://mauricubo.com/categories/do/</link>
+    <link>https://www.mauricubo.com/categories/do/</link>
     <description>Recent content in do on I&#39;m Mauricio Alpuin</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 19 Oct 2022 18:21:33 +0000</lastBuildDate><atom:link href="https://mauricubo.com/categories/do/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 19 Oct 2022 18:21:33 +0000</lastBuildDate><atom:link href="https://www.mauricubo.com/categories/do/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Install Kubernetes from scratch</title>
-      <link>https://mauricubo.com/posts/install-kubernetes-from-scratch/</link>
+      <link>https://www.mauricubo.com/posts/install-kubernetes-from-scratch/</link>
       <pubDate>Wed, 19 Oct 2022 18:21:33 +0000</pubDate>
       
-      <guid>https://mauricubo.com/posts/install-kubernetes-from-scratch/</guid>
+      <guid>https://www.mauricubo.com/posts/install-kubernetes-from-scratch/</guid>
       <description>On my way to get the Kubernetes Administrator Certificate (CKA) I decided to install my own Kubernetes cluster from scratch to get a better understanding about the components behind a cluster.
 In this tutorial we are going to use the following components in order to install our own cluster and play with it.
 Kubernetes Docker Terraform DigitalOcean Flannel Ubuntu I&amp;rsquo;m going to assume that you have already read my latest post and you have your DigitalOcean account or you have already had three virtual machines that we could use for installing and configuring our cluster.</description>
@@ -20,19 +20,19 @@ Kubernetes Docker Terraform DigitalOcean Flannel Ubuntu I&amp;rsquo;m going to a
     
     <item>
       <title>Deploy your own hosted Ghost Blog on Kubernetes - Part 2</title>
-      <link>https://mauricubo.com/posts/deploy-your-own-hosted-ghost-blog-on-kubernetes-part-2/</link>
+      <link>https://www.mauricubo.com/posts/deploy-your-own-hosted-ghost-blog-on-kubernetes-part-2/</link>
       <pubDate>Mon, 19 Sep 2022 15:36:25 +0000</pubDate>
       
-      <guid>https://mauricubo.com/posts/deploy-your-own-hosted-ghost-blog-on-kubernetes-part-2/</guid>
+      <guid>https://www.mauricubo.com/posts/deploy-your-own-hosted-ghost-blog-on-kubernetes-part-2/</guid>
       <description>In the first part of this tutorial we have created our kubernetes cluster and have deployed our Ghost Blog accessible over internet. In this second part we are going to be focused on applying an SSL configuration with Letsencrypt in order to publish our website with valid certificates for all users. Step 1 - Install and configure the Cert Manager 🔗Cert Manager is the responsable tool to add, manage and issue the certificates in the Kubernetes cluster.</description>
     </item>
     
     <item>
       <title>Deploy your own hosted Ghost Blog on Kubernetes - Part 1</title>
-      <link>https://mauricubo.com/posts/deploy-your-own-hosted-ghost-blog-on-kubernetes-part-1/</link>
+      <link>https://www.mauricubo.com/posts/deploy-your-own-hosted-ghost-blog-on-kubernetes-part-1/</link>
       <pubDate>Mon, 19 Sep 2022 03:27:18 +0000</pubDate>
       
-      <guid>https://mauricubo.com/posts/deploy-your-own-hosted-ghost-blog-on-kubernetes-part-1/</guid>
+      <guid>https://www.mauricubo.com/posts/deploy-your-own-hosted-ghost-blog-on-kubernetes-part-1/</guid>
       <description>I&amp;rsquo;ve started to use Ghost as a platform to write my nerdy post, because I would like to use it as my personal notebook, but I want to use it in a good way to contribute to the community as well (because everything is possible googling). But this time, I decided to host my own blog and do all the work from scratch and I want to share what I&amp;rsquo;m learning while doing it.</description>
     </item>
     
