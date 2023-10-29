@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>api on I&#39;m Mauricio Alpuin</title>
-    <link>https://mauricubo.com/categories/api/</link>
+    <link>https://www.mauricubo.com/categories/api/</link>
     <description>Recent content in api on I&#39;m Mauricio Alpuin</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 20 Feb 2023 04:02:34 +0000</lastBuildDate><atom:link href="https://mauricubo.com/categories/api/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 20 Feb 2023 04:02:34 +0000</lastBuildDate><atom:link href="https://www.mauricubo.com/categories/api/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Speech to Text - Transcribe your WhatsApp audios</title>
-      <link>https://mauricubo.com/posts/speech-to-text-transcribe-your-whatsapp-audios/</link>
+      <link>https://www.mauricubo.com/posts/speech-to-text-transcribe-your-whatsapp-audios/</link>
       <pubDate>Mon, 20 Feb 2023 04:02:34 +0000</pubDate>
       
-      <guid>https://mauricubo.com/posts/speech-to-text-transcribe-your-whatsapp-audios/</guid>
+      <guid>https://www.mauricubo.com/posts/speech-to-text-transcribe-your-whatsapp-audios/</guid>
       <description>The other day I was playing with the openai library that transcribes and translates audios, this library is call whisper and there is a package for python.
 But I really wanted to use it for something else. Almost every day, I receive Whatsapp audios when I am in the middle of a meeting. So I decided to write some code to integrate the transcriber library into the Whatsapp API. And this is the Speech to Text Bot.</description>
     </item>

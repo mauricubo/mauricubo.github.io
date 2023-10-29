@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>terraform on I&#39;m Mauricio Alpuin</title>
-    <link>https://mauricubo.com/tags/terraform/</link>
+    <link>https://www.mauricubo.com/tags/terraform/</link>
     <description>Recent content in terraform on I&#39;m Mauricio Alpuin</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 19 Oct 2022 18:21:33 +0000</lastBuildDate><atom:link href="https://mauricubo.com/tags/terraform/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 19 Oct 2022 18:21:33 +0000</lastBuildDate><atom:link href="https://www.mauricubo.com/tags/terraform/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Install Kubernetes from scratch</title>
-      <link>https://mauricubo.com/posts/install-kubernetes-from-scratch/</link>
+      <link>https://www.mauricubo.com/posts/install-kubernetes-from-scratch/</link>
       <pubDate>Wed, 19 Oct 2022 18:21:33 +0000</pubDate>
       
-      <guid>https://mauricubo.com/posts/install-kubernetes-from-scratch/</guid>
+      <guid>https://www.mauricubo.com/posts/install-kubernetes-from-scratch/</guid>
       <description>On my way to get the Kubernetes Administrator Certificate (CKA) I decided to install my own Kubernetes cluster from scratch to get a better understanding about the components behind a cluster.
 In this tutorial we are going to use the following components in order to install our own cluster and play with it.
 Kubernetes Docker Terraform DigitalOcean Flannel Ubuntu I&amp;rsquo;m going to assume that you have already read my latest post and you have your DigitalOcean account or you have already had three virtual machines that we could use for installing and configuring our cluster.</description>
