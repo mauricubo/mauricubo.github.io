@@ -1,4 +1,4 @@
-baseURL = 'https://example.org/'
+baseURL = 'https://www.mauricubo.com/'
 languageCode = 'en-us'
 title = 'My debug.log'
 theme = 'typo'
