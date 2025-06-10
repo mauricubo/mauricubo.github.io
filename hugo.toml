@@ -1,0 +1,89 @@
+baseURL = 'https://example.org/'
+languageCode = 'en-us'
+title = 'My debug.log'
+theme = 'typo'
+
+# Google analytics code
+# googleAnalytics = "G-xxxxxxxxx"
+
+[taxonomies]
+tag = 'tags'
+
+[params]
+# Meta description
+description = "A Tech Blog"
+logo = '/images/logo.png'
+
+# Appearance settings
+theme = 'dark'
+colorPalette = 'base16-eighties' # default; catpuccin; gruvebox; eink; base16-default; base16-eighties; base16-ocean; base16-mocha; base16-cupcake.
+hideHeader = true
+
+# Intro on main page, content is markdown
+homeIntroTitle = 'Hi you!'
+homeIntroContent = """
+Glad to have you here! This blog is my little corner of the tech world, where I share things that I am learning everyday.
+Here (hopefully), you'll find things related to development, DIY projects, personal notes, and whatever else comes to mind.
+"""
+
+# Collection to display on home
+homeCollectionTitle = 'Posts'
+homeCollection = 'posts'
+
+# Lists parameters
+paginationSize = 100
+listSummaries = true
+listDateFormat = '2 Jan 2006'
+singleDateFormat = '2 Jan 2006'
+
+# Footer params
+showFooter = true
+footerContent = "**Malpuin** site - Powered by **[Hugo](https://gohugo.io/)** and **[tomfran/typo](https://github.com/tomfran/typo)**"
+
+# Breadcrumbs
+[params.breadcrumbs]
+enabled = true
+showCurrentPage = true
+home = "Home"
+
+# Social icons
+[[params.social]]
+name = "github"
+url = "https://github.com/mauricubo"
+
+[[params.social]]
+name = "stackoverflow"
+url = "https://stackoverflow.com/users/10979237/mauricubo"
+
+[[params.social]]
+name = "x"
+url = "https://x.com/mauricubo"
+
+# Main menu pages
+[[params.menu]]
+name = "home"
+url = "/"
+
+[[params.menu]]
+name = "posts"
+url = "/posts"
+
+[[params.menu]]
+name = "about"
+url = "/about"
+
+# Syntax highlight on code blocks
+[markup]
+[markup.highlight]
+style = 'algol'
+
+# Giscus comments
+[params.giscus]
+enable = false
+repo = "user/repo"
+repoid = "repoId"
+category = "General"
+categoryid = "categoryId"
+mapping = "pathname"
+theme = "preferred_color_scheme"
+

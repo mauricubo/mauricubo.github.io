@@ -1,0 +1,34 @@
+{{/* Header */}}
+
+<div class="header">
+
+    {{ if or (not (.Param "hideHeader")) .IsHome }}
+
+    <div class="title-container">
+        <img src="{{ site.Params.Logo }}" alt="Logo" class="header-image">
+        <h1 class="header-title">
+            <a href="{{ site.BaseURL }}">{{ site.Title }}</a>
+        </h1>
+    </div>
+
+
+    <div class="header-menu">
+        {{ $currentPage := . }}
+
+        {{ with site.Params.menu }}
+        {{ range . }}
+
+        <p
+            class="small {{ if eq .name (lower $currentPage.Name) }} bold {{end}}">
+            <a href="{{ .url }}" {{ if and (isset . "newTab") .newTab
+                }}target="_blank" rel="noopener noreferrer" {{ end }}>
+                /{{.name }}
+            </a>
+        </p>
+        {{ end }}
+        {{ end }}
+    </div>
+
+    {{ end }}
+
+</div>
