@@ -8,20 +8,17 @@ on:
 
 
 jobs:
-  build:
-    runs-on: hugomods/hugo
+  build-deploy:
+    runs-on: ubuntu-latest
 
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true  # Fetch Hugo themes (true OR recursive)
-          fetch-depth: 0    # Fetch all history for .GitInfo and .Lastmod
-        
-      - name: Build
-        run: docker run -it -v ${pwd}:/src hugomods/hugo hugo --minify 
-      
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Build Hugo Site with Docker
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/src hugomods/hugo hugo --minify
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
