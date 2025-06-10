@@ -15,7 +15,7 @@ description = "A Tech Blog"
 logo = '/images/logo.png'
 
 # Appearance settings
-theme = 'dark'
+theme = 'auto'
 colorPalette = 'base16-eighties' # default; catpuccin; gruvebox; eink; base16-default; base16-eighties; base16-ocean; base16-mocha; base16-cupcake.
 hideHeader = true
 
