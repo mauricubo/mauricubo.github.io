@@ -5,7 +5,7 @@ description: "Setup Netdata on Microk8s"
 author: "Mauricio"
 authorAvatarPath: "/images/avatar.jpeg"
 date: 2024-01-14
-draft: false
+draft: true
 toc: true
 readTime: true
 autonumber: true
