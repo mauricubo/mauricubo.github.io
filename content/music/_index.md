@@ -3,7 +3,7 @@
 # (its page, its menu link, its home-page block and everything inside it).
 # Preview hidden things locally with: hugo server -D
 cascade:
-  draft: false
+  draft: true
 title: "Music"
 description: "Things I've recorded, played or put together. Press play."
 menu:
