@@ -1,0 +1,32 @@
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="{{ "/" | relURL }}">
+      <span class="brand-logo"><img src="{{ site.Params.logo | relURL }}" alt="" width="30" height="30"></span>
+      <span class="brand-name">{{ site.Title }}</span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      {{- $page := . }}
+      {{- range site.Menus.main }}
+      {{- $active := or (eq $page.RelPermalink .URL) (and $page.Section (eq (printf "/%s/" $page.Section) .URL)) }}
+      {{- if and .Page .Page.Params.apps }}
+      {{- /* A page with an `apps` list in its front matter becomes a dropdown. */}}
+      <details class="nav-dropdown" data-dropdown>
+        <summary{{ if $active }} class="active"{{ end }}>{{ .Name }}{{ partial "icon.html" "chevron-down" }}</summary>
+        <div class="dropdown-panel">
+          {{- range .Page.Params.apps }}
+          <a href="{{ .url | relURL }}"><span class="dd-name">{{ .name }}</span>{{ with .tagline }}<span class="dd-desc">{{ . }}</span>{{ end }}</a>
+          {{- end }}
+          <a class="dd-all" href="{{ .URL }}">All apps {{ partial "icon.html" "arrow-right" }}</a>
+        </div>
+      </details>
+      <a class="nav-mobile-only{{ if $active }} active{{ end }}" href="{{ .URL }}">{{ .Name }}</a>
+      {{- else }}
+      <a href="{{ .URL }}"{{ if $active }} class="active" aria-current="page"{{ end }}>{{ .Name }}</a>
+      {{- end }}
+      {{- end }}
+    </nav>
+    <button class="icon-btn theme-toggle" type="button" aria-label="Toggle dark mode" data-theme-toggle>
+      {{ partial "icon.html" "moon" }}{{ partial "icon.html" "sun" }}
+    </button>
+  </div>
+</header>

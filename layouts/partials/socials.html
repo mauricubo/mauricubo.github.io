@@ -1,0 +1,11 @@
+<ul class="socials">
+  {{- range site.Params.social }}
+  <li><a class="icon-btn" href="{{ .url }}" rel="me noopener" target="_blank" aria-label="{{ .name }}" title="{{ .name }}">{{ partial "icon.html" .icon }}</a></li>
+  {{- end }}
+  {{- with site.Params.email }}
+  <li><a class="icon-btn" href="mailto:{{ . }}" aria-label="Email" title="Email">{{ partial "icon.html" "mail" }}</a></li>
+  {{- end }}
+  {{- if .rss }}{{ with site.GetPage "/blog" }}{{ with .OutputFormats.Get "rss" }}
+  <li><a class="icon-btn" href="{{ .RelPermalink }}" aria-label="RSS feed" title="RSS feed">{{ partial "icon.html" "rss" }}</a></li>
+  {{- end }}{{ end }}{{ end }}
+</ul>

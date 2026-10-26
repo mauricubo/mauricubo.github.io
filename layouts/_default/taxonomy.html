@@ -1,0 +1,10 @@
+{{ define "main" }}
+<div class="narrow">
+  {{ partial "page-head.html" . }}
+  <ul class="tags tag-cloud">
+    {{ range .Data.Terms.ByCount }}
+    <li><a class="tag" href="{{ .Page.RelPermalink }}">#{{ .Page.LinkTitle }} <span class="count">{{ .Count }}</span></a></li>
+    {{ end }}
+  </ul>
+</div>
+{{ end }}

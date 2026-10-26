@@ -1,0 +1,40 @@
+{{ define "main" }}
+{{ partial "page-head.html" . }}
+{{ with .Content }}<div class="prose narrow-left">{{ . }}</div>{{ end }}
+{{ $music := hugo.Data.music }}
+
+{{ with $music.tracks }}
+<section class="home-section">
+  <div class="section-head"><h2>Tracks</h2></div>
+  {{ partial "player.html" . }}
+</section>
+{{ end }}
+
+{{ with $music.videos }}
+<section class="home-section">
+  <div class="section-head"><h2>Videos</h2></div>
+  <div class="video-grid">
+    {{ range . }}
+    <figure class="video-card">
+      {{ partial "video-embed.html" . }}
+      <figcaption>
+        <strong>{{ .title }}</strong>
+        {{ with .description }}<span>{{ . }}</span>{{ end }}
+      </figcaption>
+    </figure>
+    {{ end }}
+  </div>
+</section>
+{{ end }}
+
+{{ with $music.platforms }}
+<section class="home-section">
+  <div class="section-head"><h2>Listen elsewhere</h2></div>
+  <div class="platforms">
+    {{ range . }}<a class="btn" href="{{ .url }}" target="_blank" rel="noopener">{{ partial "icon.html" (.icon | default "external") }} {{ .name }}</a>{{ end }}
+  </div>
+</section>
+{{ end }}
+
+{{ if not (or $music.tracks $music.videos) }}<p class="empty">Music coming soon.</p>{{ end }}
+{{ end }}

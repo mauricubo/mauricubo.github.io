@@ -1,0 +1,18 @@
+{{ define "main" }}
+<div class="narrow">
+  {{ partial "page-head.html" . }}
+  {{ with site.Taxonomies.tags }}
+  <ul class="tags tag-cloud">
+    {{ range .ByCount }}<li><a class="tag" href="{{ .Page.RelPermalink }}">#{{ .Page.LinkTitle }} <span class="count">{{ .Count }}</span></a></li>{{ end }}
+  </ul>
+  {{ end }}
+  {{ range .Pages.GroupByDate "2006" }}
+  <section class="year-group">
+    <h2 class="year">{{ .Key }}</h2>
+    <ul class="post-list">{{ range .Pages }}{{ partial "post-item.html" . }}{{ end }}</ul>
+  </section>
+  {{ else }}
+  <p class="empty">No posts yet — check back soon.</p>
+  {{ end }}
+</div>
+{{ end }}

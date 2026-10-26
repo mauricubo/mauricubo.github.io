@@ -1,0 +1,17 @@
+{{ define "main" }}
+<article class="about">
+  {{ partial "page-head.html" . }}
+  <div class="about-grid">
+    <div class="prose">{{ .Content }}</div>
+    <aside class="about-aside">
+      {{ with .Params.photo }}<img class="about-photo" src="{{ . | relURL }}" alt="Photo of {{ site.Params.author }}" loading="lazy">{{ end }}
+      {{ with .Params.facts }}
+      <dl class="facts">
+        {{ range . }}<div><dt>{{ .label }}</dt><dd>{{ .value }}</dd></div>{{ end }}
+      </dl>
+      {{ end }}
+      {{ partial "socials.html" (dict) }}
+    </aside>
+  </div>
+</article>
+{{ end }}

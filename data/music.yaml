@@ -1,0 +1,47 @@
+# ---------------------------------------------------------------------------
+# Music page content
+#
+# TRACKS: drop your audio files (mp3, m4a, ogg, wav...) in `static/music/`
+# and list them here. `file` can also be a full https:// URL to a file hosted
+# elsewhere (e.g. Cloudflare R2, Backblaze, archive.org).
+# ---------------------------------------------------------------------------
+tracks:
+  - title: "Demo arpeggio in C (replace me)"
+    file: "/music/demo-1.mp3"
+    description: "A generated placeholder so you can see the player working."
+    # artist: "Mauricio A."              # optional, defaults to the site author
+    # cover: "/images/music/cover.jpg"   # optional square image
+    # duration: "3:41"                   # optional, detected automatically when played
+    download: true                        # show a download button
+
+  - title: "Demo arpeggio in D minor (replace me)"
+    file: "/music/demo-2.mp3"
+    description: "Another placeholder track."
+
+# ---------------------------------------------------------------------------
+# VIDEOS: link videos hosted on a platform. Use ONE of:
+#   youtube: video ID or full URL (https://youtu.be/..., https://www.youtube.com/watch?v=...)
+#   vimeo:   numeric video ID
+#   url:     direct link to a video file (.mp4/.webm) hosted anywhere
+# ---------------------------------------------------------------------------
+videos: []
+#  - title: "Live session"
+#    youtube: "https://www.youtube.com/watch?v=XXXXXXXXXXX"
+#    description: "Recorded at home, 2026."
+#  - title: "Rehearsal"
+#    vimeo: "76979871"
+#  - title: "Short clip"
+#    url: "https://example.com/videos/clip.mp4"
+#    poster: "/images/music/clip-poster.jpg"
+
+# ---------------------------------------------------------------------------
+# PLATFORMS: optional links to your profiles (Spotify, SoundCloud, Bandcamp...)
+# icon: any icon name from layouts/partials/icon.html (e.g. music, youtube, external)
+# ---------------------------------------------------------------------------
+platforms: []
+#  - name: "SoundCloud"
+#    url: "https://soundcloud.com/your-profile"
+#    icon: "music"
+#  - name: "YouTube"
+#    url: "https://youtube.com/@your-channel"
+#    icon: "youtube"

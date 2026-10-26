@@ -1,0 +1,39 @@
+{{ define "main" }}
+<section class="hero">
+  <img class="hero-avatar" src="{{ site.Params.avatar | relURL }}" alt="Photo of {{ site.Params.author }}" width="128" height="128">
+  <div class="hero-body">
+    {{ with .Params.eyebrow }}<p class="eyebrow">{{ . }}</p>{{ end }}
+    <h1 class="hero-title">{{ .Title }}</h1>
+    <div class="hero-text">{{ .Content }}</div>
+    <div class="hero-actions">
+      {{ with site.GetPage "/blog" }}{{ with .RelPermalink }}<a class="btn btn-primary" href="{{ . }}">Read the blog {{ partial "icon.html" "arrow-right" }}</a>{{ end }}{{ end }}
+      {{ with site.GetPage "/portfolio" }}{{ with .RelPermalink }}<a class="btn" href="{{ . }}">See my work</a>{{ end }}{{ end }}
+      {{ partial "socials.html" (dict) }}
+    </div>
+  </div>
+</section>
+
+{{ $posts := where site.RegularPages "Section" "blog" }}
+{{ with first 3 $posts }}
+<section class="home-section">
+  <div class="section-head">
+    <h2>Latest posts</h2>
+    <a class="more" href="{{ (site.GetPage "/blog").RelPermalink }}">All posts {{ partial "icon.html" "arrow-right" }}</a>
+  </div>
+  <ul class="post-list">{{ range . }}{{ partial "post-item.html" . }}{{ end }}</ul>
+</section>
+{{ end }}
+
+{{ $projects := where site.RegularPages "Section" "portfolio" }}
+{{ $featured := where $projects "Params.featured" true }}
+{{ with first 3 (cond (gt (len $featured) 0) $featured $projects) }}
+<section class="home-section">
+  <div class="section-head">
+    <h2>Selected work</h2>
+    <a class="more" href="{{ (site.GetPage "/portfolio").RelPermalink }}">Full portfolio {{ partial "icon.html" "arrow-right" }}</a>
+  </div>
+  <div class="card-grid">{{ range . }}{{ partial "project-card.html" . }}{{ end }}</div>
+</section>
+{{ end }}
+
+{{ end }}

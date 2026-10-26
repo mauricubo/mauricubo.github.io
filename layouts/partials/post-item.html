@@ -1,0 +1,10 @@
+<li class="post-item">
+  <a class="post-link" href="{{ .RelPermalink }}">
+    <span class="post-title">{{ .Title }}</span>
+    {{ with .Description }}<span class="post-desc">{{ . }}</span>{{ end }}
+  </a>
+  <span class="post-meta">
+    <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "Jan 2, 2006" }}</time>
+    <span aria-hidden="true">·</span> {{ .ReadingTime }} min read
+  </span>
+</li>

@@ -1,0 +1,7 @@
+{{ define "main" }}
+<div class="narrow">
+  {{ partial "page-head.html" . }}
+  {{ with .Content }}<div class="prose">{{ . }}</div>{{ end }}
+  <ul class="post-list">{{ range .Pages }}{{ partial "post-item.html" . }}{{ end }}</ul>
+</div>
+{{ end }}

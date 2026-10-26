@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>DeutschWeg – A2 bis C2</title>
+  <meta name="description" content="Deutsch lernen von A2 bis C2: Lernpfad, Spaced Repetition, Grammatik, Lesen, Hören, Sprechen und Schreiben.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='33' fill='%23222'/><rect y='33' width='100' height='34' fill='%23d00'/><rect y='67' width='100' height='33' fill='%23fc0'/></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar" id="topbar">
+      <a class="brand" href="#/path" aria-label="DeutschWeg Startseite">
+        <span class="flag"><i></i><i></i><i></i></span>
+        <span>DeutschWeg</span>
+      </a>
+      <div class="top-stats">
+        <span class="chip" id="chip-level" title="Aktuelles Niveau">A2</span>
+        <span class="chip streak" id="chip-streak" title="Tage in Folge">🔥 0</span>
+        <span class="goal" id="chip-goal" title="Tagesziel">
+          <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" class="ring-bg"/><circle cx="18" cy="18" r="15" class="ring-fg" id="goal-ring"/></svg>
+          <b id="goal-text">0</b>
+        </span>
+        <a class="icon-btn" href="#/settings" aria-label="Einstellungen" title="Einstellungen">⚙️</a>
+      </div>
+    </header>
+
+    <nav class="nav" id="nav">
+      <a href="#/path" data-nav="path"><span class="ni">🗺️</span><span>Lernpfad</span></a>
+      <a href="#/review" data-nav="review"><span class="ni">🔁</span><span>Wiederholen</span><em class="badge" id="badge-review" hidden>0</em></a>
+      <a href="#/practice" data-nav="practice"><span class="ni">🏋️</span><span>Training</span></a>
+      <a href="#/library" data-nav="library"><span class="ni">📚</span><span>Bibliothek</span></a>
+      <a href="#/stats" data-nav="stats"><span class="ni">📈</span><span>Fortschritt</span></a>
+    </nav>
+
+    <main id="view" tabindex="-1"></main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Curriculum & reference data -->
+  <script src="js/data/a2.js"></script>
+  <script src="js/data/b1.js"></script>
+  <script src="js/data/b2.js"></script>
+  <script src="js/data/c1.js"></script>
+  <script src="js/data/c2.js"></script>
+  <script src="js/data/reference.js"></script>
+  <!-- App -->
+  <script src="js/core.js"></script>
+  <script src="js/exercises.js"></script>
+  <script src="js/drills.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

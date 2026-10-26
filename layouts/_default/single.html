@@ -1,0 +1,7 @@
+{{ define "main" }}
+<article class="narrow">
+  {{ partial "page-head.html" . }}
+  <div class="prose">{{ .Content }}</div>
+  {{ if .Params.lastmod }}<p class="updated">Last updated <time datetime="{{ .Lastmod.Format "2006-01-02" }}">{{ .Lastmod.Format "January 2, 2006" }}</time></p>{{ end }}
+</article>
+{{ end }}

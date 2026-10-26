@@ -1,0 +1,13 @@
+/public/
+/resources/_gen/
+.hugo_build.lock
+.DS_Store
+
+# Never commit secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+id_rsa*
+id_ed25519*

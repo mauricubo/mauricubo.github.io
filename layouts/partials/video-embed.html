@@ -1,0 +1,20 @@
+{{- /* Accepts a map with one of: youtube (ID or full URL), vimeo (ID), url (direct video file). Optional: title, poster. */ -}}
+{{- $title := .title | default "Video" }}
+{{- if .youtube }}
+  {{- $id := .youtube }}
+  {{- with findRESubmatch `(?:v=|youtu\.be/|embed/|shorts/|live/)([\w-]{11})` $id 1 }}{{ $id = index (index . 0) 1 }}{{ end }}
+  <div class="video-frame lite-yt" data-youtube="{{ $id }}" data-title="{{ $title }}">
+    <button type="button" class="lite-play" aria-label="Play video: {{ $title }}">
+      <img src="https://i.ytimg.com/vi/{{ $id }}/hqdefault.jpg" alt="" loading="lazy">
+      <span class="lite-icon">{{ partial "icon.html" "play" }}</span>
+    </button>
+  </div>
+{{- else if .vimeo }}
+  <div class="video-frame">
+    <iframe src="https://player.vimeo.com/video/{{ .vimeo }}?dnt=1" title="{{ $title }}" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+  </div>
+{{- else if .url }}
+  <div class="video-frame">
+    <video controls preload="metadata" src="{{ .url | relURL }}"{{ with .poster }} poster="{{ . | relURL }}"{{ end }}></video>
+  </div>
+{{- end }}

@@ -1,0 +1,25 @@
+{{ define "main" }}
+<article class="narrow post">
+  <header class="page-head post-head">
+    <a class="back" href="{{ "blog/" | relURL }}">{{ partial "icon.html" "arrow-left" }} Blog</a>
+    <h1>{{ .Title }}</h1>
+    {{ with .Description }}<p class="lead">{{ . }}</p>{{ end }}
+    <p class="post-meta">
+      <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "January 2, 2006" }}</time>
+      <span aria-hidden="true">·</span> {{ .ReadingTime }} min read
+    </p>
+    {{ partial "tags.html" . }}
+  </header>
+  {{ with .Params.cover }}<img class="post-cover" src="{{ . | relURL }}" alt="">{{ end }}
+  {{ if and .Params.toc (gt (len .Fragments.Headings) 0) }}
+  <details class="toc" open><summary>Contents</summary>{{ .TableOfContents }}</details>
+  {{ end }}
+  <div class="prose">{{ .Content }}</div>
+  {{ if or .NextInSection .PrevInSection }}
+  <nav class="pager" aria-label="More posts">
+    {{ with .NextInSection }}<a class="pager-link" href="{{ .RelPermalink }}"><span>Newer</span>{{ .Title }}</a>{{ else }}<span></span>{{ end }}
+    {{ with .PrevInSection }}<a class="pager-link pager-next" href="{{ .RelPermalink }}"><span>Older</span>{{ .Title }}</a>{{ end }}
+  </nav>
+  {{ end }}
+</article>
+{{ end }}

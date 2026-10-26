@@ -1,0 +1,21 @@
+{{ define "main" }}
+<article class="narrow project">
+  <header class="page-head">
+    <a class="back" href="{{ "portfolio/" | relURL }}">{{ partial "icon.html" "arrow-left" }} Portfolio</a>
+    <h1>{{ .Title }}</h1>
+    {{ with .Description }}<p class="lead">{{ . }}</p>{{ end }}
+    <dl class="project-meta">
+      <div><dt>Year</dt><dd>{{ .Date.Format "2006" }}</dd></div>
+      {{ with .Params.role }}<div><dt>Role</dt><dd>{{ . }}</dd></div>{{ end }}
+      {{ with .Params.stack }}<div><dt>Stack</dt><dd><ul class="chips">{{ range . }}<li>{{ . }}</li>{{ end }}</ul></dd></div>{{ end }}
+    </dl>
+    {{ with .Params.links }}
+    <div class="project-links">
+      {{ range . }}<a class="btn" href="{{ .url }}" target="_blank" rel="noopener">{{ partial "icon.html" (.icon | default "external") }} {{ .name }}</a>{{ end }}
+    </div>
+    {{ end }}
+  </header>
+  {{ with .Params.cover }}<img class="post-cover" src="{{ . | relURL }}" alt="">{{ end }}
+  <div class="prose">{{ .Content }}</div>
+</article>
+{{ end }}

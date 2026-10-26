@@ -1,0 +1,46 @@
+baseURL = "https://mauricubo.com/"
+locale = "en-US"
+title = "mauricubo"
+enableRobotsTXT = true
+
+[params]
+  author = "Mauricio A."
+  description = "Mauricio's corner of the internet — notes on development, DIY, robotics and music."
+  avatar = "images/avatar.jpg"
+  logo = "images/logo.png"
+  # Default image used when a link to this site is shared on social media.
+  ogImage = "images/avatar.jpg"
+  # Optional: show an email link in the footer and About page.
+  # email = "you@example.com"
+
+  # Social links shown in the hero, footer and About page.
+  # `icon` must match an icon defined in layouts/partials/icon.html.
+  [[params.social]]
+    name = "GitHub"
+    url = "https://github.com/mauricubo"
+    icon = "github"
+  [[params.social]]
+    name = "Stack Overflow"
+    url = "https://stackoverflow.com/users/10979237/mauricubo"
+    icon = "stackoverflow"
+
+
+[taxonomies]
+  tag = "tags"
+
+[outputs]
+  home = ["HTML"]
+  section = ["HTML", "RSS"]
+  taxonomy = ["HTML"]
+  term = ["HTML"]
+
+[markup]
+  [markup.goldmark.renderer]
+    # Allows raw HTML inside Markdown posts.
+    unsafe = true
+  [markup.highlight]
+    style = "nord"
+    noClasses = true
+  [markup.tableOfContents]
+    startLevel = 2
+    endLevel = 3

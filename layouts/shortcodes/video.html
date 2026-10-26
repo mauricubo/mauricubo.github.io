@@ -1,0 +1,5 @@
+{{- /* {{< video youtube="dQw4w9WgXcQ" title="..." >}}  |  {{< video vimeo="123456" >}}  |  {{< video url="https://.../clip.mp4" >}} */ -}}
+<figure class="video-embed">
+  {{ partial "video-embed.html" (dict "youtube" (.Get "youtube") "vimeo" (.Get "vimeo") "url" (.Get "url") "title" (.Get "title") "poster" (.Get "poster")) }}
+  {{ with .Get "title" }}<figcaption>{{ . }}</figcaption>{{ end }}
+</figure>

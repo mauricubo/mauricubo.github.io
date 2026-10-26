@@ -1,0 +1,9 @@
+{{ define "main" }}
+<div class="narrow">
+  <header class="page-head">
+    <a class="back" href="{{ "tags/" | relURL }}">{{ partial "icon.html" "arrow-left" }} All tags</a>
+    <h1>#{{ .Title }}</h1>
+  </header>
+  <ul class="post-list">{{ range .Pages }}{{ partial "post-item.html" . }}{{ end }}</ul>
+</div>
+{{ end }}

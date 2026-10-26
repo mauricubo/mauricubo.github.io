@@ -1,0 +1,5 @@
+{{- /* {{< audio src="/music/song.mp3" title="My song" >}} */ -}}
+<figure class="audio-embed">
+  <audio controls preload="metadata" src="{{ .Get "src" | relURL }}"></audio>
+  {{ with .Get "title" }}<figcaption>{{ . }}</figcaption>{{ end }}
+</figure>
