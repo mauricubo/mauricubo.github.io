@@ -162,7 +162,10 @@
     pill.addEventListener('click', (e) => {
       e.stopPropagation();
       panel.hidden = !panel.hidden;
-      if (!panel.hidden) renderPanel();
+      if (!panel.hidden) {
+        panel.style.top = Math.round(pill.getBoundingClientRect().bottom + 8) + 'px';
+        renderPanel();
+      }
     });
     document.addEventListener('click', (e) => {
       if (!panel.hidden && !e.target.closest('.xp-panel')) panel.hidden = true;

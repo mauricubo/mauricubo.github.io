@@ -170,17 +170,18 @@ select:focus, input:focus, button:focus-visible { outline: 2px solid var(--accen
 .topbar-inner {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 10px 24px;
+  padding: 10px 24px 6px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 18px;
+  gap: 8px 18px;
 }
 .brand { display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 0; cursor: pointer; }
 .brand-name { font-weight: 800; font-size: 1.08rem; letter-spacing: -0.02em; }
 .logo-bg { fill: var(--accent); }
 .logo-str { fill: none; stroke: var(--accent-ink); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; opacity: 0.6; }
 .logo-dot { fill: var(--accent-ink); }
-.tabs { display: flex; gap: 2px; margin-right: auto; overflow-x: auto; scrollbar-width: none; }
+.tabs { order: 3; width: 100%; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; margin: 0 -6px; padding-bottom: 2px; }
 .tabs::-webkit-scrollbar { display: none; }
 .tabs button {
   background: none;
@@ -196,8 +197,7 @@ select:focus, input:focus, button:focus-visible { outline: 2px solid var(--accen
 }
 .tabs button:hover { color: var(--text); background: var(--surface-2); }
 .tabs button.active { color: var(--accent-ink); background: var(--accent); }
-@media (max-width: 1480px) and (min-width: 901px) { .tabs button { padding: 8px 9px; font-size: 0.88rem; } .metro .tap { display: none; } .vol input { width: 72px; } .brand-name, .xp-bar { display: none; } }
-.top-actions { display: flex; align-items: center; gap: 10px; }
+.top-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; }
 .icon-btn {
   display: inline-grid;
   place-items: center;
@@ -1055,3 +1055,10 @@ body.fx-lock { overflow: hidden; }
 .seg { scrollbar-width: none; }
 .seg::-webkit-scrollbar { display: none; }
 .ar-lane { scrollbar-color: var(--border-2) transparent; }
+@media (max-width: 640px) {
+  /* every section visible: tabs wrap instead of scrolling sideways */
+  .tabs { flex-wrap: wrap; justify-content: center; overflow: visible; margin: 0; }
+  .tabs button { padding: 6px 10px; font-size: 0.86rem; }
+  .brand-name { display: none; }
+  .topbar-inner { gap: 8px; }
+}
