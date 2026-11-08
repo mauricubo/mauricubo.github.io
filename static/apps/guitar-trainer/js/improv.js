@@ -117,7 +117,7 @@
 
   let root, fb, keyApi, styleApi;
   const st = Object.assign(
-    { key: 9, prog: 'blues12', style: null, bpm: null, view: 'chord', area: 'all', labels: 'intervals', callResp: false },
+    { key: 9, prog: 'blues12', style: null, bpm: null, view: 'chord', area: 'all', labels: 'intervals', callResp: false, overlay: 'shape' },
     store.get('improv', {})
   );
   const save = () => store.set('improv', st);
@@ -186,6 +186,9 @@
             <div class="ctl"><label>Labels</label><div id="imLabels"></div></div>
             <label class="toggle" title="The app plays a phrase, you answer it"><input type="checkbox" id="imCR"><span></span> Call &amp; response</label>
           </div>
+          <div class="ctl-row">
+            <div class="ctl"><label>Fretboard helper</label><div id="imOverlay"></div></div>
+          </div>
         </div>
 
         <div class="card prog-card">
@@ -216,6 +219,14 @@
             <span><i class="dot role-root"></i>Chord root</span><span><i class="dot role-third"></i>3rd</span><span><i class="dot role-fifth"></i>5th</span>
             <span><i class="dot role-seventh"></i>7th</span><span><i class="dot role-other"></i>Scale tone / tension</span>
           </div></div>
+          <p class="im-overlay-info" id="imOverlayInfo"></p>
+        </div>
+
+        <div class="card im-coach">
+          <div class="row-between"><h3>Note coach</h3><button class="btn sm" id="imMic">🎤 Listen to my guitar</button></div>
+          <p class="hint">Click any note on the fretboard, or turn on the microphone and play. The coach explains what the note means over the chord that is sounding. With the backing track running, chord tones you land on the beat score points.</p>
+          <div class="im-explain" id="imExplain"><span class="muted">Waiting for a note…</span></div>
+          <div class="stats" id="imTargets"></div>
         </div>
 
         <div class="card coach">
@@ -227,7 +238,24 @@
           </div>
         </div>`;
 
-      fb = new GT.Fretboard($('#imFb', el), Object.assign(GT.fbOpts(), { onClick: (s, f) => A.pluck(GT.tuning()[s] + f, undefined, { vel: 0.9 }) }));
+      fb = new GT.Fretboard(
+        $('#imFb', el),
+        Object.assign(GT.fbOpts(), {
+          onClick: (s, f) => {
+            const m = GT.tuning()[s] + f;
+            A.pluck(m, undefined, { vel: 0.9 });
+            coachNote(m, { s, f });
+          },
+        })
+      );
+      ui.seg($('#imOverlay', el), [{ v: 'none', label: 'Off' }, { v: 'shape', label: 'Arpeggio shape' }, { v: 'moves', label: 'Moves to next chord' }], st.overlay, (v) => {
+        st.overlay = v;
+        save();
+        showChord(current);
+      });
+      $('#imMic', el).addEventListener('click', toggleMic);
+      if (!GT.pitch || !GT.pitch.supported()) $('#imMic', el).disabled = true;
+      renderTargets();
       keyApi = ui.keyChips($('#imKeys', el), st.key, (v) => {
         st.key = v;
         save();
@@ -426,7 +454,184 @@
       const label = st.labels === 'notes' ? T.pretty(nm.map.get(pc)) : st.labels === 'intervals' ? (cd ? T.prettyDeg(cd) : relDeg) : '';
       return { s: n.s, f: n.f, label, cls };
     });
+    drawOverlay(info, nInfo, notes);
     fb.draw(notes);
+  }
+
+  /* -------- fretboard helper: arpeggio shape / guide-tone moves -------- */
+  function overlayWindow(info) {
+    const mf = +GT.settings.frets;
+    if (st.area !== 'all') {
+      const [lo, hi] = st.area.split('-').map(Number);
+      return { lo, hi: Math.min(hi, mf), label: '' };
+    }
+    const wins = GT.shapes.cagedWindows(GT.tuning(), info.rootPc, mf);
+    const w = wins.reduce((a, b) => (Math.abs(b.lo - 4) < Math.abs(a.lo - 4) ? b : a));
+    return { lo: w.lo, hi: w.hi, label: ` (${w.id} shape)` };
+  }
+
+  function drawOverlay(info, nInfo, notes) {
+    const out = $('#imOverlayInfo', root);
+    if (st.overlay === 'none') {
+      fb.paths([]);
+      out.innerHTML = '';
+      return;
+    }
+    const tuning = GT.tuning();
+    const mf = +GT.settings.frets;
+    const w = overlayWindow(info);
+    const range = `frets ${w.lo}–${w.hi}${w.label}`;
+    const mark = (s, f, cls) => {
+      const n = notes.find((x) => x.s === s && x.f === f);
+      if (n) n.cls += ' ' + cls;
+    };
+    if (st.overlay === 'shape') {
+      const box = GT.shapes.box(tuning, info.rootPc, info.degs.slice(0, 4), w.lo, w.hi, mf);
+      fb.paths([{ pts: box, cls: 'shape' }]);
+      box.forEach((n) => mark(n.s, n.f, 'shape-note'));
+      out.innerHTML = `<strong>${info.name} arpeggio</strong> in ${range}: follow the line from low to high (${info.degs
+        .slice(0, 4)
+        .map(T.prettyDeg)
+        .join(' – ')}). These are your safest landing notes. Practise it in the <a href="#" data-go="arpeggios">Arpeggios</a> section.`;
+      return;
+    }
+    const moves = GT.shapes.moves(tuning, info, nInfo, w.lo, w.hi, mf);
+    const paths = [];
+    const seen = new Set();
+    const txt = [];
+    moves.forEach((mv) => {
+      const fromDeg = info.degs[info.pcs.indexOf(mv.from.m % 12)];
+      const toDeg = nInfo.degs[nInfo.pcs.indexOf(mv.to.m % 12)];
+      if (mv.dist === 0 && mv.from.s === mv.to.s && mv.from.f === mv.to.f) mark(mv.from.s, mv.from.f, 'common');
+      else {
+        paths.push({ pts: [mv.from, mv.to], cls: 'move', arrow: true });
+        // the target is labelled and coloured by its role in the NEXT chord
+        const existing = notes.find((x) => x.s === mv.to.s && x.f === mv.to.f);
+        const target = { s: mv.to.s, f: mv.to.f, label: T.prettyDeg(toDeg), cls: `role-${T.roleOf(toDeg)} nxt` };
+        if (existing) Object.assign(existing, target);
+        else notes.push(target);
+      }
+      const key = `${mv.from.m % 12}>${mv.to.m % 12}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      const name = (inf, pc) => T.pretty(inf.names[inf.pcs.indexOf(pc)]);
+      const how = mv.dist === 0 ? 'stays (common tone)' : `${mv.to.m < mv.from.m ? 'down' : 'up'} a ${mv.dist === 1 ? 'half' : 'whole'} step`;
+      txt.push(`${name(info, mv.from.m % 12)} <small>${T.prettyDeg(fromDeg)}</small> → ${name(nInfo, mv.to.m % 12)} <small>${T.prettyDeg(toDeg)} of ${nInfo.name}</small> · ${how}`);
+    });
+    fb.paths(paths);
+    out.innerHTML = txt.length
+      ? `<strong>Guide tones → ${nInfo.name}</strong> in ${range}. Arrows show the shortest move; white rings are notes that stay.<br>${txt.join('<br>')}`
+      : `No guide-tone moves in ${range}: try another neck area.`;
+  }
+
+  /* -------- note coach: what does this note mean over the current chord? -------- */
+  const ROLE_TXT = {
+    1: 'the <strong>root</strong>: home base of the chord. Safe, but plain if you land on it all the time.',
+    3: 'the <strong>3rd</strong>: it decides major or minor. The strongest note to land on when the chord changes.',
+    5: 'the <strong>5th</strong>: stable and neutral. Good for resting.',
+    7: 'the <strong>7th</strong>: colour and direction. A guide tone that usually moves by step into the next chord.',
+    6: 'the <strong>6th</strong>: here it works as a chord tone, giving a sweet, open colour.',
+  };
+  function classify(pc) {
+    const p = prog();
+    const ch = p.chords[current];
+    const info = chordInfo(ch);
+    const { scale, rootPc } = scaleFor(ch);
+    const scalePcs = scale.deg.map((d) => T.mod12(rootPc + T.DEG_SEMI[d]));
+    const nInfo = chordInfo(p.chords[(current + 1) % p.chords.length]);
+    const name = T.pretty(T.FLATS[pc]);
+    const k = info.pcs.indexOf(pc);
+    const nk = nInfo.pcs.indexOf(pc);
+    let kind;
+    let text;
+    if (k >= 0 && k < 4) {
+      const d = info.degs[k];
+      kind = 'chord';
+      text = `<strong>${T.pretty(info.names[k])}</strong> is ${ROLE_TXT[T.degNum(d)] || 'a chord tone.'}`;
+    } else {
+      const rel = degreeRelativeTo(info.rootPc, pc);
+      const below = info.pcs.slice(0, 4).find((x) => T.mod12(pc - x) === 1);
+      const nearest = info.pcs.slice(0, 4).reduce((a, b) => (Math.min(T.mod12(pc - b), T.mod12(b - pc)) < Math.min(T.mod12(pc - a), T.mod12(a - pc)) ? b : a));
+      const nearName = T.pretty(info.names[info.pcs.indexOf(nearest)]);
+      if (scalePcs.includes(pc) && below !== undefined) {
+        kind = 'avoid';
+        text = `<strong>${name}</strong> is the <strong>${T.prettyDeg(rel)}</strong>: an <em>avoid note</em> over ${info.name}, a half step above ${T.pretty(info.names[info.pcs.indexOf(below)])}. Pass through it and resolve down.`;
+      } else if (scalePcs.includes(pc)) {
+        kind = 'tension';
+        text = `<strong>${name}</strong> is the <strong>${T.prettyDeg(rel)}</strong>: a <em>tension</em> from ${T.pretty(ui.nameMap(rootPc, scale.deg).root)} ${scale.name}. Colourful, great on weak beats, then step to ${nearName}.`;
+      } else {
+        kind = 'outside';
+        text = `<strong>${name}</strong> is <em>outside</em> ${T.pretty(ui.nameMap(rootPc, scale.deg).root)} ${scale.name} (the ${T.prettyDeg(rel)}). Use it as a chromatic passing note and resolve by half step, to ${nearName} for example.`;
+      }
+    }
+    if (nk >= 0 && nInfo.name !== info.name) text += ` <span class="muted">It is also the ${T.prettyDeg(nInfo.degs[nk])} of the next chord, ${nInfo.name}: hold it across the change.</span>`;
+    return { kind, text, info };
+  }
+
+  let beatTimes = [];
+  const tgt = { hits: 0, chordNotes: 0, notes: 0, pending: 0 };
+  function renderTargets() {
+    const el = $('#imTargets', root);
+    if (!el) return;
+    el.innerHTML = `<div class="stat"><span class="v">${tgt.hits}</span><span class="k">On-beat chord tones</span></div>
+      <div class="stat"><span class="v">${tgt.notes ? Math.round((tgt.chordNotes / tgt.notes) * 100) + '%' : '—'}</span><span class="k">Chord-tone share</span></div>
+      <div class="stat"><span class="v">${GT.game ? GT.game.counter('improvTargets') : 0}</span><span class="k">All-time targets</span></div>`;
+  }
+
+  function coachNote(midi, pos, time) {
+    const pc = midi % 12;
+    const r = classify(pc);
+    const icon = { chord: '🎯', tension: '🌈', avoid: '⚠️', outside: '🧪' }[r.kind];
+    $('#imExplain', root).innerHTML = `<span class="im-kind ${r.kind}">${icon} ${{ chord: 'Chord tone', tension: 'Tension', avoid: 'Avoid note', outside: 'Outside note' }[r.kind]}</span> <span>${r.text}</span>`;
+    if (pos) fb.flash(pos.s, pos.f, r.kind === 'chord' ? 'hit' : r.kind === 'avoid' || r.kind === 'outside' ? 'miss' : 'playing', 420);
+    // scoring only while the backing track runs and for real played notes (microphone)
+    if (time === undefined || !(clock && clock.running)) return;
+    tgt.notes++;
+    if (r.kind === 'chord') tgt.chordNotes++;
+    const onBeat = beatTimes.some((b) => Math.abs(time - b) < 0.11);
+    if (r.kind === 'chord' && onBeat) {
+      tgt.hits++;
+      tgt.pending += 2;
+      const all = GT.game.count('improvTargets');
+      if (all >= 25) GT.game.unlock('improv-targets');
+      if (tgt.pending >= 10) {
+        GT.game.award(tgt.pending, 'on-beat chord tones');
+        tgt.pending = 0;
+      }
+    }
+    renderTargets();
+  }
+
+  let micOff = null;
+  async function toggleMic() {
+    const btn = $('#imMic', root);
+    if (GT.pitch.active) {
+      GT.pitch.stop();
+      if (micOff) micOff();
+      micOff = null;
+      btn.classList.remove('on');
+      btn.textContent = '🎤 Listen to my guitar';
+      return;
+    }
+    try {
+      await GT.pitch.start();
+    } catch (e) {
+      ui.toast('Microphone permission was denied.', 3000);
+      return;
+    }
+    btn.classList.add('on');
+    btn.textContent = '🎤 Listening… (use headphones)';
+    micOff = GT.pitch.on((ev) => {
+      if (ev.type !== 'note' || !root.classList.contains('active')) return;
+      // show where the note could be played inside the current area
+      const [aLo, aHi] = st.area === 'all' ? [0, 99] : st.area.split('-').map(Number);
+      let pos = null;
+      GT.tuning().forEach((open, s) => {
+        const f = ev.midi - open;
+        if (f >= Math.max(0, aLo) && f <= Math.min(+GT.settings.frets, aHi) && (!pos || Math.abs(f - 5) < Math.abs(pos.f - 5))) pos = { s, f };
+      });
+      coachNote(ev.midi, pos, ev.time);
+    });
   }
 
   const REL_DEG = ['1', 'b9', '9', '#9', '3', '11', '#11', '5', 'b13', '13', 'b7', '7'];
@@ -502,6 +707,7 @@
         showChord(slot.i);
       });
     }
+    if (bs % 4 === 0) beatTimes = beatTimes.concat(t).slice(-8);
     if (k % 4 === 0) {
       const prog01 = (k + 4) / slot.steps;
       A.at(t, () => {

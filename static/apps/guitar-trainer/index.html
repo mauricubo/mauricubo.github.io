@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MauriFret — Guitar Scales & Improvisation</title>
-  <meta name="description" content="Interactive guitar scale explorer, a step-by-step harmony course, fretboard and ear training, sequence drills, backing tracks with chord-scale guidance and a 12-week study plan from intermediate to advanced.">
+  <meta name="description" content="Interactive guitar scale explorer, a step-by-step harmony course, arpeggio workouts, fretboard and ear training, sequence drills, backing tracks with chord-scale guidance and a 12-week study plan from intermediate to advanced.">
   <meta name="theme-color" content="#0e1014">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23f5a524'/%3E%3Cpath d='M8 23V9l8 8 8-8v14' fill='none' stroke='%231a1206' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='16' cy='17' r='3.4' fill='%231a1206'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,6 +25,7 @@
       <nav class="tabs" id="tabs" aria-label="Sections">
         <button data-view="explore">Explore</button>
         <button data-view="practice">Practice</button>
+        <button data-view="arpeggios">Arpeggios</button>
         <button data-view="improvise">Improvise</button>
         <button data-view="analyze">Analyzer</button>
         <button data-view="harmony">Harmony</button>
@@ -57,6 +58,7 @@
   <main>
     <section class="view" id="view-explore"></section>
     <section class="view" id="view-practice"></section>
+    <section class="view" id="view-arpeggios"></section>
     <section class="view" id="view-improvise"></section>
     <section class="view" id="view-analyze"></section>
     <section class="view" id="view-harmony"></section>
@@ -74,8 +76,12 @@
   <script src="js/audio.js"></script>
   <script src="js/fretboard.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/pitch.js"></script>
+  <script src="js/shapes.js"></script>
   <script src="js/explore.js"></script>
   <script src="js/practice.js"></script>
+  <script src="js/arpeggio.js"></script>
   <script src="js/improv.js"></script>
   <script src="js/plan.js"></script>
   <script src="js/learn.js"></script>

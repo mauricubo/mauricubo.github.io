@@ -942,13 +942,14 @@
   function runQuiz(el, { next, total, goal, title, onDone }) {
     let i = 0;
     let score = 0;
+    let combo = 0;
     let q = null;
     function render() {
       if (i >= total) return finish();
       q = next(i);
       el.innerHTML = `
         <div class="card prompt-card hm-quiz">
-          <div class="hm-quiz-top"><span class="muted small">${title} · ${i + 1} / ${total}</span><span class="muted small">Score ${score}</span></div>
+          <div class="hm-quiz-top"><span class="muted small">${title} · ${i + 1} / ${total}</span><span class="muted small">${combo >= 2 ? `<span class="hm-combo">🔥 ${combo} in a row</span> · ` : ''}Score ${score}</span></div>
           <div class="hm-meter"><i style="width:${(i / total) * 100}%"></i></div>
           <div class="prompt">${q.prompt}</div>
           ${q.play ? `<div class="btn-row center"><button class="btn sm" data-hear>${q.ear ? '🔊 Hear again' : '🔊 Hear it'}</button></div>` : ''}
@@ -961,7 +962,11 @@
       if (q.done) return;
       q.done = true;
       const ok = k === q.a;
-      if (ok) score++;
+      if (ok) {
+        score++;
+        combo++;
+        GT.game.award(5 + (combo >= 3 ? 5 : 0), combo >= 3 ? `combo ×${combo}` : 'correct');
+      } else combo = 0;
       $$('.btn.ans', el).forEach((b, j) => {
         b.disabled = true;
         if (j === q.a) b.classList.add('good');
@@ -1189,10 +1194,18 @@
       <div class="hm-units">${UNITS.map((u, i) => {
         const s = stageState(u);
         const open = isUnlocked(i);
-        return `<button class="hm-unit ${open ? '' : 'locked'} ${isComplete(u.id) ? 'done' : ''}" data-open="${i}" ${open ? '' : 'aria-disabled="true"'}>
-          <span class="hm-unit-num">${String(i + 1).padStart(2, '0')}</span>
+        const complete = isComplete(u.id);
+        const status = complete
+          ? `<span class="hm-stars small">${starHTML(stars(U(u.id).quiz))}</span><span class="hm-done-tag">✓ Completed</span>`
+          : i === nextI
+            ? '<span class="hm-next-tag">Up next</span>'
+            : open
+              ? ''
+              : '<span class="muted small">🔒 Locked</span>';
+        return `<button class="hm-unit ${open ? '' : 'locked'} ${complete ? 'done' : ''} ${i === nextI ? 'next' : ''}" data-open="${i}" ${open ? '' : 'aria-disabled="true"'}>
+          <span class="hm-unit-num">${complete ? '✓' : String(i + 1).padStart(2, '0')}</span>
           <span class="hm-unit-body">
-            <span class="hm-unit-top"><span class="tag">${u.level}</span>${open ? '' : '<span class="muted small">🔒 Locked</span>'}</span>
+            <span class="hm-unit-top"><span class="tag">${u.level}</span>${status}</span>
             <strong>${u.title}</strong>
             <span class="muted small">${u.goal}</span>
             <span class="hm-pills"><i class="${s.learn ? 'on' : ''}">Learn</i><i class="${s.check ? 'on' : ''}">Check${s.quizText ? ' ' + s.quizText : ''}</i><i class="${s.play ? 'on' : ''}">Play</i></span>
@@ -1289,10 +1302,14 @@
       next: (i) => (items[i].g ? GENS[items[i].g]() : fixedQ(items[i].m)),
       onDone(score, passed, actions) {
         const p = U(u.id);
+        const firstPass = passed && p.quiz < PASS;
         p.learn = true;
         p.quiz = Math.max(p.quiz, score / QUIZ_LEN);
         save();
         refreshSteps();
+        if (firstPass) GT.game.award(40, 'check passed');
+        if (score === QUIZ_LEN) GT.game.unlock('harmony-perfect');
+        if (passed) checkCompletion(u);
         actions.innerHTML = `<button class="btn" data-stage="check">Try again</button>${
           passed ? `<button class="btn primary" data-stage="play">Go to practice →</button>` : '<button class="btn" data-stage="learn">Review the lesson</button>'
         }`;
@@ -1309,8 +1326,10 @@
         save();
         refreshSteps();
         A.bell();
+        GT.game.award(60, 'practice done');
       }
       renderComplete(box.querySelector('[data-complete]'), u);
+      checkCompletion(u, true);
     };
     box.innerHTML = `<div class="card hm-practice-intro"><p class="eyebrow">Play · ${pr.title}</p><p>${pr.intro}</p></div><div data-ex></div><div data-complete></div>`;
     const ex = $('[data-ex]', box);
@@ -1355,6 +1374,111 @@
       });
     }
     if (U(u.id).practice) renderComplete($('[data-complete]', box), u);
+  }
+
+  const stars = (q) => (q >= 1 ? 3 : q >= 0.875 ? 2 : 1);
+  const starHTML = (n) => '★★★'.slice(0, n) + '<i>' + '★★★'.slice(n) + '</i>';
+
+  /** Called after the check is passed or the practice is done */
+  function checkCompletion(u, fromPractice) {
+    const p = U(u.id);
+    if (isComplete(u.id) && !p.celebrated) {
+      p.celebrated = true;
+      save();
+      celebrate(u);
+    } else if (fromPractice && p.quiz < PASS && !p.nudged) {
+      p.nudged = true;
+      save();
+      showModal({
+        icon: '🎸',
+        title: 'Practice complete!',
+        body: `One step left: pass the <strong>Check</strong> (${Math.ceil(PASS * QUIZ_LEN)}/${QUIZ_LEN}) to complete “${u.title}” and unlock the next unit.`,
+        primary: { label: 'Take the check →', run: () => goStage('check') },
+        secondary: { label: 'Keep practising', run: () => {} },
+      });
+    }
+  }
+
+  function celebrate(u) {
+    const i = UNITS.indexOf(u);
+    const next = UNITS[i + 1];
+    const p = U(u.id);
+    loops.forEach((l) => l.stop());
+    silence();
+    GT.game.award(100, 'unit complete');
+    GT.game.unlock('harmony-unit');
+    const done = UNITS.filter((x) => isComplete(x.id)).length;
+    if (done >= 6) GT.game.unlock('harmony-half');
+    if (done >= UNITS.length) GT.game.unlock('harmony-all');
+    const n = stars(p.quiz);
+    showModal({
+      icon: '🏆',
+      cls: 'win',
+      title: `Unit ${i + 1} complete!`,
+      body: `<div class="hm-stars" aria-label="${n} of 3 stars">${starHTML(n)}</div>
+        <p><strong>${u.title}</strong><br><span class="muted">Check ${Math.round(p.quiz * QUIZ_LEN)}/${QUIZ_LEN} · Practice ✓ · ${done}/${UNITS.length} units done</span></p>
+        ${n < 3 ? '<p class="muted small">Score 8/8 on the check to earn all three stars.</p>' : ''}
+        ${next ? `<p>Up next: <strong>Unit ${i + 2} · ${next.title}</strong></p>` : '<p>You finished the whole course! 🎉</p>'}`,
+      primary: next ? { label: `Start unit ${i + 2} →`, run: () => openUnit(i + 1, 'learn') } : { label: 'Back to the course map', run: renderHome },
+      secondary: { label: 'Stay here', run: () => {} },
+      tertiary: next ? { label: 'Course map', run: renderHome } : null,
+      countdown: next ? 8 : 0,
+      confetti: true,
+    });
+  }
+
+  function goStage(id) {
+    stage = id;
+    renderStage();
+    window.scrollTo(0, 0);
+  }
+
+  /** Small modal dialog with an optional auto-continue countdown */
+  function showModal(o) {
+    const old = $('.hm-modal');
+    if (old) old.remove();
+    const m = GT.h(`<div class="hm-modal ${o.cls || ''}" role="dialog" aria-modal="true" aria-label="${esc(o.title)}">
+      <div class="hm-modal-card">
+        ${o.confetti ? `<div class="hm-confetti" aria-hidden="true">${Array.from({ length: 24 }, (_, k) => `<i style="--x:${(k * 37) % 100};--d:${(k % 6) * 0.12}s;--h:${(k * 47) % 360}"></i>`).join('')}</div>` : ''}
+        <div class="hm-modal-icon">${o.icon}</div>
+        <h2>${o.title}</h2>
+        <div class="hm-modal-body">${o.body}</div>
+        <div class="btn-row center">
+          ${o.tertiary ? '<button class="btn" data-m="3">' + o.tertiary.label + '</button>' : ''}
+          <button class="btn" data-m="2">${o.secondary.label}</button>
+          <button class="btn primary" data-m="1">${o.primary.label}${o.countdown ? ' <span class="hm-count"></span>' : ''}</button>
+        </div>
+        ${o.countdown ? '<div class="hm-meter"><i class="hm-countbar"></i></div>' : ''}
+      </div>
+    </div>`);
+    document.body.appendChild(m);
+    let left = o.countdown;
+    let timer = null;
+    const close = (fn) => {
+      clearInterval(timer);
+      document.removeEventListener('keydown', onKey);
+      m.remove();
+      if (fn) fn();
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') close(o.secondary.run);
+    };
+    document.addEventListener('keydown', onKey);
+    m.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-m]');
+      if (b) close({ 1: o.primary, 2: o.secondary, 3: o.tertiary }[b.dataset.m].run);
+      else if (e.target === m) close(o.secondary.run);
+    });
+    if (left) {
+      const tick = () => {
+        $('.hm-count', m).textContent = `(${left})`;
+        $('.hm-countbar', m).style.width = `${(left / o.countdown) * 100}%`;
+        if (left-- <= 0) close(o.primary.run);
+      };
+      tick();
+      timer = setInterval(tick, 1000);
+    }
+    $('[data-m="1"]', m).focus();
   }
 
   function renderComplete(el, u) {
@@ -1405,5 +1529,5 @@
 
   GT.views.harmony = view;
   // exposed for automated checks of the generated content
-  GT.harmonyInternals = { GENS, BUILD, DEMOS, chordIn, roman };
+  GT.harmonyInternals = { GENS, BUILD, DEMOS, chordIn, roman, celebrate: (id) => celebrate(UNITS.find((u) => u.id === id)) };
 })();

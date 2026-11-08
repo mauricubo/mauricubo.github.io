@@ -11,6 +11,8 @@
       this.el = el;
       this.opts = Object.assign({ frets: 15, tuning: [40, 45, 50, 55, 59, 64], lefty: false, onClick: null }, opts);
       this.notes = [];
+      this.pathList = [];
+      this.uid = 'fb' + Math.random().toString(36).slice(2, 8);
       el.classList.add('fretboard');
       el.addEventListener('click', (e) => {
         const hit = e.target.closest('[data-hit]');
@@ -53,7 +55,7 @@
     render() {
       const g = (this.g = this.geom());
       const { F, n, W, H, xs, X, y, gap, padT, boardH } = g;
-      let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="${NS}" role="img" aria-label="Guitar fretboard">`;
+      let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="${NS}" role="img" aria-label="Guitar fretboard"><defs><marker id="${this.uid}-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="fb-arrowhead"/></marker></defs>`;
       const bx1 = Math.min(X(xs[0]), X(xs[F]));
       const bw = Math.abs(X(xs[F]) - X(xs[0]));
       svg += `<rect class="fb-board" x="${bx1}" y="${padT - 12}" width="${bw}" height="${boardH + 24}" rx="4"/>`;
@@ -96,12 +98,14 @@
           svg += `<rect data-hit="1" data-s="${s}" data-f="${f}" x="${x1}" y="${y(s) - gap / 2}" width="${Math.abs(X(xb) - X(xa))}" height="${gap}"/>`;
         }
       }
-      svg += '</g><g class="fb-notes"></g><g class="fb-fx"></g></svg>';
+      svg += '</g><g class="fb-paths"></g><g class="fb-notes"></g><g class="fb-fx"></g></svg>';
       this.el.innerHTML = svg;
       this.svg = this.el.querySelector('svg');
       this.layer = this.el.querySelector('.fb-notes');
       this.fx = this.el.querySelector('.fb-fx');
+      this.pathLayer = this.el.querySelector('.fb-paths');
       this.draw(this.notes);
+      this.paths(this.pathList);
     }
 
     noteSVG(nt, extraCls = '') {
@@ -124,6 +128,32 @@
       // ghosts first so active notes sit on top
       const sorted = this.notes.slice().sort((a, b) => (a.cls || '').includes('ghost') ? -1 : (b.cls || '').includes('ghost') ? 1 : 0);
       this.layer.innerHTML = sorted.map((n) => this.noteSVG(n)).join('');
+    }
+
+    /**
+     * Lines drawn under the notes: [{ pts: [{s, f}], cls, arrow }]
+     * Used to outline arpeggio shapes and show where notes move on the next chord.
+     */
+    paths(list) {
+      this.pathList = list || [];
+      if (!this.pathLayer) return;
+      const { noteX, y } = this.g;
+      this.pathLayer.innerHTML = this.pathList
+        .filter((p) => p.pts.length > 1 && p.pts.every((n) => n.f <= this.opts.frets))
+        .map((p) => {
+          const pts = p.pts.map((n) => [noteX(n.f), y(n.s)]);
+          if (p.arrow) {
+            // stop short of the target note so the arrowhead stays visible
+            const [x1, y1] = pts[0];
+            const [x2, y2] = pts[1];
+            const len = Math.hypot(x2 - x1, y2 - y1) || 1;
+            pts[1] = [x2 - ((x2 - x1) / len) * 15, y2 - ((y2 - y1) / len) * 15];
+            pts[0] = [x1 + ((x2 - x1) / len) * 13, y1 + ((y2 - y1) / len) * 13];
+          }
+          const d = pts.map(([x, yy], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${yy.toFixed(1)}`).join(' ');
+          return `<path class="fb-path ${p.cls || ''}" d="${d}"${p.arrow ? ` marker-end="url(#${this.uid}-arrow)"` : ''}/>`;
+        })
+        .join('');
     }
 
     /** temporary highlight */
