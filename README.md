@@ -229,3 +229,8 @@ anything. To harden it further:
 - Optional: on GitHub Pro, Pages can be served from a private repository, so the source isn't public either.
 
 Old URLs from the previous site (`/posts/`, `/posts/my-first-post/`) redirect to the new ones.
+
+## Fonts
+
+All fonts are self-hosted in `static/fonts/`, so visitors' browsers make no requests to third parties:
+[Mona Sans](https://github.com/github/mona-sans) (GitHub), [Source Serif 4](https://github.com/adobe-fonts/source-serif) (Adobe) and [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) (JetBrains), all under the SIL Open Font License 1.1. Keep the licence files next to the fonts.
