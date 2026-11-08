@@ -30,5 +30,11 @@ for name in "${!APPS[@]}"; do
         mkdir -p "$dest/$(dirname "$f")"
         cp "$TMP/$name/$f" "$dest/$f"
       done
-  echo "  copied $(find "$dest" -type f | wc -l) files, version $(git -C "$TMP/$name" rev-parse --short HEAD)"
+  # Cache-busting: browsers may keep css/js for hours, so tag their links in
+  # index.html with the app version; every sync then loads the new files.
+  version="$(git -C "$TMP/$name" rev-parse --short HEAD)"
+  if [ -f "$dest/index.html" ]; then
+    sed -i -E "s#((href|src)=\"(css|js)/[^\"?]+\.(css|js))\"#\1?v=$version\"#g" "$dest/index.html"
+  fi
+  echo "  copied $(find "$dest" -type f | wc -l) files, version $version"
 done

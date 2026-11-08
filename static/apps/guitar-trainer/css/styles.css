@@ -204,7 +204,7 @@ select:focus, input:focus, button:focus-visible { outline: 2px solid var(--accen
 .logo-bg { fill: var(--accent); }
 .logo-str { fill: none; stroke: var(--accent-ink); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; opacity: 0.6; }
 .logo-dot { fill: var(--accent-ink); }
-.tabs { order: 3; width: 100%; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; margin: 0 -6px; padding-bottom: 2px; }
+.tabs { order: 3; width: 100%; display: flex; flex-wrap: wrap; gap: 2px; margin: 0 -6px; padding-bottom: 2px; } /* wraps instead of scrolling: every section always visible */
 .tabs::-webkit-scrollbar { display: none; }
 .tabs button {
   background: none;
@@ -1080,7 +1080,7 @@ body.fx-lock { overflow: hidden; }
 .ar-lane { scrollbar-color: var(--border-2) transparent; }
 @media (max-width: 640px) {
   /* every section visible: tabs wrap instead of scrolling sideways */
-  .tabs { flex-wrap: wrap; justify-content: center; overflow: visible; margin: 0; }
+  .tabs { justify-content: center; margin: 0; }
   .tabs button { padding: 6px 10px; font-size: 0.86rem; }
   .brand-name { display: none; }
   .topbar-inner { gap: 8px; }
