@@ -1085,3 +1085,6 @@ body.fx-lock { overflow: hidden; }
   .brand-name { display: none; }
   .topbar-inner { gap: 8px; }
 }
+/* finger badge on the top-right corner of a lane cell */
+.ar-fg { position: absolute; top: -7px; right: -7px; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--text); color: var(--bg); font-family: var(--font); font-style: normal; font-size: 0.66rem; font-weight: 800; box-shadow: 0 0 0 2px var(--surface); }
+.ar-cell.cur .ar-fg { background: var(--accent-ink); color: var(--accent); }

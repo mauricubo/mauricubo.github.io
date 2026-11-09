@@ -225,7 +225,7 @@
       seg('#arPattern', [{ v: 'up', label: 'Up' }, { v: 'down', label: 'Down' }, { v: 'updown', label: 'Up & down' }], st.pattern, (v) => set({ pattern: v }));
       seg('#arNpb', [{ v: 2, label: '8ths' }, { v: 3, label: 'Triplets' }, { v: 4, label: '16ths' }], st.npb, (v) => set({ npb: v }));
       seg('#arPlayMode', PLAY_MODES, st.play, (v) => set({ play: v }));
-      seg('#arLabels', [{ v: 'degrees', label: 'Intervals' }, { v: 'notes', label: 'Notes' }], st.labels, (v) => {
+      seg('#arLabels', [{ v: 'degrees', label: 'Intervals' }, { v: 'notes', label: 'Notes' }, { v: 'fingers', label: 'Fingers' }], st.labels, (v) => {
         st.labels = v;
         save();
         drawAll();
@@ -325,12 +325,26 @@
 
   function tip(c) {
     if (st.mode === 'prog') return 'The line never jumps: each new chord starts on its chord tone <strong>closest</strong> to the last note. Notes ringed in white are shared with the next chord: hold them across the change.';
-    if (st.shape === 'box') return `Position ${st.pos + 1} of 5. The ${S.cagedWindows(GT.tuning(), st.key, maxFret())[st.pos].id} shape is built around the ${S.cagedWindows(GT.tuning(), st.key, maxFret())[st.pos].id} chord form you already know. When it feels easy, try the next position up the neck.`;
+    if (st.shape === 'box') {
+      const id = S.cagedWindows(GT.tuning(), st.key, maxFret())[st.pos].id;
+      return `Position ${st.pos + 1} of 5: the ${id} shape, built around the ${id} chord form you already know. Keep one finger per fret and the hand still; the small circled numbers are the fingers (switch Labels to <strong>Fingers</strong> to see them on the neck).`;
+    }
     if (st.shape === 'string') return `One string forces you to see the <strong>distance</strong> between chord tones: ${c.degs.map(T.prettyDeg).join(' → ')} → 1. Say each interval name as you slide.`;
-    return 'Two notes per string while climbing: this connects positions diagonally and covers more than two octaves. Shift on the first note of each string.';
+    const kind = c.shape && c.shape.kind;
+    const pattern =
+      kind === 'classic'
+        ? 'The classic pattern: <strong>two notes per string</strong>, the index starting each string'
+        : kind === 'short'
+          ? 'This root sits high on the neck, so the shape stops before the top octave'
+          : 'Mostly two notes per string, with one where a second note would need a stretch';
+    return `${pattern}. The hand <strong>shifts by sliding along a string</strong> (watch the finger numbers), never while crossing strings, so the line stays smooth across positions.`;
   }
 
+  /** Finger that plays a note: 1–4 (stretches use the index or pinky), 0 = open string */
+  const fingerOf = (n) => (n.finger === undefined ? null : n.finger === 'o' ? 0 : Math.min(4, Math.max(1, n.finger)));
+
   function labelFor(n, c) {
+    if (st.labels === 'fingers' && fingerOf(n) !== null) return String(fingerOf(n));
     if (st.labels === 'notes') return P(c.names[c.degs.indexOf(n.deg)] || T.FLATS[n.m % 12]);
     return T.prettyDeg(n.deg);
   }
@@ -379,7 +393,7 @@
       if (n.rest) cells.push(`<span class="ar-cell rest ${i === cur ? 'cur' : ''}" data-i="${i}">${chordTag}<b>·</b><i>rest</i></span>`);
       else
         cells.push(
-          `<span class="ar-cell role-${T.roleOf(n.deg)} ${i === cur ? 'cur' : ''} ${res || ''} ${n.first && st.mode === 'prog' ? 'first' : ''}" data-i="${i}">${chordTag}<b>${labelFor(n, c)}</b><i>${['E', 'A', 'D', 'G', 'B', 'e'][n.s] || n.s + 1}${n.f}</i></span>`
+          `<span class="ar-cell role-${T.roleOf(n.deg)} ${i === cur ? 'cur' : ''} ${res || ''} ${n.first && st.mode === 'prog' ? 'first' : ''}" data-i="${i}">${chordTag}<b>${labelFor(n, c)}</b><i>${['E', 'A', 'D', 'G', 'B', 'e'][n.s] || n.s + 1}${n.f}${fingerOf(n) !== null && st.labels !== 'fingers' ? `<span class="ar-fg" title="Finger ${fingerOf(n) || 'open'}">${fingerOf(n)}</span>` : ''}</i></span>`
         );
     }
     el.innerHTML = cells.join('');
