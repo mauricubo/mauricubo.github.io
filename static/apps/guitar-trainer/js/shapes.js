@@ -29,6 +29,10 @@
    * the hand position and the finger that make the whole line cheapest to play.
    */
   const FINGER_COST = { 0: 1.6, 1: 0, 2: 0, 3: 0.05, 4: 0.25, 5: 1.6 };
+  // frets get narrower up the neck: a one-fret stretch (e.g. 1→4 for a major 3rd) is hard
+  // near the nut and comfortable from the 5th fret up
+  const stretchCost = (f) => (f <= 4 ? 1.6 : f <= 9 ? 1.2 : 0.8);
+  const fingerCost = (x) => (x.finger === 'o' ? 0 : x.finger === 0 || x.finger === 5 ? stretchCost(x.f) : FINGER_COST[x.finger]);
 
   /**
    * pitches: ascending [{m, deg}]
@@ -41,6 +45,9 @@
    *       first     → string the first note must be played on
    *       fLo, fHi  → frets the notes must stay within
    *       climb     → reward per fret the hand moves up the neck (diagonal shapes)
+   *       counts    → exact number of notes on each string, starting from the first note's string
+   *       maxGap    → max semitones between two notes on the same string (4 = a 3rd: move to
+   *                   the next string rather than reach a 4th along one string)
    *       noSkip    → never skip a string
    * Returns the cheapest fingering as [{s, f, m, deg, h, finger}] (finger 'o' = open string) or null.
    */
@@ -64,11 +71,12 @@
       });
       return out;
     };
+    const pathStart = (x) => x.s0;
     // starting a line on the index or middle finger leaves room for the rest of the hand
     const START = { 1: 0, 2: 0.1, 3: 0.4, 4: 0.9 };
     let layer = options(pitches[0])
       .filter((x) => o.first == null || x.s === o.first)
-      .map((x) => ({ ...x, c: 1, cost: x.finger === 'o' ? 0 : FINGER_COST[x.finger] + (START[x.finger] || 0), prev: null, h0: x.h }));
+      .map((x) => ({ ...x, c: 1, cost: fingerCost(x) + (START[x.finger] || 0), prev: null, h0: x.h, s0: x.s }));
     if (!layer.length) return null;
     const layers = [layer];
     for (let i = 1; i < pitches.length; i++) {
@@ -79,8 +87,14 @@
           if (b.s < a.s) return; // ascending lines never go back to a lower string
           if (o.noSkip && b.s > a.s + 1) return;
           if (o.per && b.s !== a.s && a.c !== o.per) return;
+          if (o.maxGap && b.s === a.s && pitches[i].m - pitches[i - 1].m > o.maxGap && !(o.topSlide && i === pitches.length - 1)) return;
           const c = b.s === a.s ? a.c + 1 : 1;
           if (c > o.maxPer) return;
+          if (o.counts) {
+            const k = b.s - pathStart(a);
+            if (b.s !== a.s && a.c !== o.counts[a.s - pathStart(a)]) return;
+            if (k >= o.counts.length || c > o.counts[k]) return;
+          }
           let cost = a.cost + (b.s - a.s > 1 ? 4 * (b.s - a.s - 1) : 0) + (c === 3 ? 1.2 : 0);
           // effective hand position (open strings leave the hand where it was)
           const ha = a.h ?? a.hCarry;
@@ -101,11 +115,11 @@
             if (o.climb && hb > ha) cost -= o.climb * Math.min(d, 3);
           }
           if (b.finger !== 'o') {
-            cost += FINGER_COST[b.finger];
+            cost += fingerCost(b);
             if (a.finger !== 'o' && b.s === a.s && hb === ha && b.finger <= a.finger) return; // same string: next finger up
             if (a.finger === b.finger && b.s !== a.s) cost += hb === ha ? 1.2 : 2; // finger roll or jump
           }
-          if (!best || cost < best.cost) best = { ...b, hCarry: hb, c, cost, prev: a, h0: a.h0 ?? hb };
+          if (!best || cost < best.cost) best = { ...b, hCarry: hb, c, cost, prev: a, h0: a.h0 ?? hb, s0: a.s0 };
         });
         if (best) next.push(best);
       });
@@ -262,6 +276,41 @@
       for (const [from, rules, mayTrim, check, kind] of attempts) {
         const path = climb(from, rules, mayTrim, check, kind);
         if (path.length) return path;
+      }
+      return [];
+    },
+
+    /**
+     * Sweep-style arpeggio (as in classical arpeggio études): two octaves from a root on the 6th
+     * or 5th string, with two notes on a string only when they are a 3rd apart, otherwise the
+     * next string. Gives the familiar 2-1-2-1-1 shapes that sit under the hand.
+     */
+    sweep(tuning, rootPc, degs, rootString, maxFret, near = 6) {
+      const roots = tones(tuning, rootPc, ['1'], maxFret)
+        .filter((n) => n.s === rootString && n.f > 0)
+        .sort((a, b) => Math.abs(a.f - near) - Math.abs(b.f - near));
+      for (const r of roots) {
+        for (let trim = 0; trim <= 2; trim++) {
+          // seven notes, as in the études: two full octaves of a triad, root to 5th for 7th chords
+          const pitches = pitchRange(rootPc, degs, r.m, r.m + 24).slice(0, 7);
+          // five strings from the root string, like sweep-picking shapes; the top note may be reached by a slide
+          const strings = [0, 1, 2, 3, 4].map((k) => rootString + k).filter((x) => x < tuning.length);
+          const base = { shifts: true, maxPer: 2, maxGap: 4, topSlide: true, strings, first: rootString };
+          const list = pitches.slice(0, pitches.length - trim);
+          // triads: the étude layout, same for major and minor (6th-string root 2-1-2-1-1,
+          // 5th-string root 2-1-1-1-2), unless it needs more than one stretch
+          let path = null;
+          if (degs.length === 3 && !trim) {
+            const counts = rootString === 0 ? [2, 1, 2, 1, 1] : [2, 1, 1, 1, 2];
+            const p = plan(list, tuning, maxFret, Object.assign({ counts }, base));
+            if (p && p.filter(isStretch).length <= 1) path = p;
+          }
+          if (!path) path = plan(list, tuning, maxFret, base);
+          if (path) {
+            path.rootString = rootString;
+            return path;
+          }
+        }
       }
       return [];
     },

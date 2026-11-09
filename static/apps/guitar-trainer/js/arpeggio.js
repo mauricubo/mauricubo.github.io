@@ -20,8 +20,16 @@
     { v: 'box', label: 'Vertical · 5 positions' },
     { v: 'string', label: 'Horizontal · one string' },
     { v: 'diag', label: 'Horizontal · across the neck' },
+    { v: 'sweep', label: 'Étude · 5-string sweep' },
   ];
   const PROGS = [
+    {
+      id: 'etude',
+      name: 'Minor ↔ major étude: i–iv–V7–i | I–IV–V7–I',
+      connect: 'sweep',
+      npb: 3,
+      ch: [['1', 'm', 1], ['4', 'm', 1], ['5', '7', 1], ['1', 'm', 1], ['1', 'maj', 1], ['4', 'maj', 1], ['5', '7', 1], ['1', 'maj', 1]],
+    },
     { id: 'iiVI', name: 'ii–V–I (major)', ch: [['2', 'm7', 1], ['5', '7', 1], ['1', 'maj7', 2]] },
     { id: 'turn', name: 'I–vi–ii–V turnaround', ch: [['1', 'maj7', 1], ['6', 'm7', 1], ['2', 'm7', 1], ['5', '7', 1]] },
     { id: 'pop', name: 'I–V–vi–IV (triads)', ch: [['1', 'maj', 1], ['5', 'maj', 1], ['6', 'm', 1], ['4', 'maj', 1]] },
@@ -41,7 +49,7 @@
   const REPS_PROG = 2;
 
   const st = Object.assign(
-    { mode: 'single', key: 0, type: 'maj7', shape: 'box', pos: 0, string: 1, start: 0, pattern: 'updown', npb: 2, bpm: 72, drums: true, trainer: false, play: 'listen', labels: 'degrees', prog: 'iiVI', win: '5-9' },
+    { mode: 'single', key: 0, type: 'maj7', shape: 'box', pos: 0, string: 1, start: 0, pattern: 'updown', npb: 2, bpm: 72, drums: true, trainer: false, play: 'listen', labels: 'degrees', prog: 'iiVI', win: '5-9', connect: 'area' },
     store.get('arp', {})
   );
   const save = () => store.set('arp', st);
@@ -72,6 +80,23 @@
     return { q, rootPc, rootName: sp.root, degs, names: sp.notes, name: T.chordName(sp.root, q), pcs: degs.map((d) => T.mod12(rootPc + T.DEG_SEMI[d])) };
   }
 
+  /** Sweep shape (6th- or 5th-string root) closest to where the hand already is */
+  function sweepNear(tuning, c, mf, center, prevMidi) {
+    let best = null;
+    [0, 1].forEach((rs) => {
+      T.neckNotes(tuning, c.rootPc, ['1'], mf)
+        .filter((n) => n.s === rs && n.f > 0)
+        .forEach((r) => {
+          const shape = S.sweep(tuning, c.rootPc, c.degs, rs, mf, r.f);
+          if (!shape.length) return;
+          const mid = shape.reduce((a, n) => a + n.f, 0) / shape.length;
+          const score = Math.abs(mid - center) + (prevMidi == null ? 0 : 0.15 * Math.abs(shape[0].m - prevMidi));
+          if (!best || score < best.score) best = { shape, score };
+        });
+    });
+    return best ? best.shape : [];
+  }
+
   function shapeLabel(c) {
     const tuning = GT.tuning();
     if (st.shape === 'box') {
@@ -79,6 +104,11 @@
       return `${w.id} shape · frets ${w.lo}–${w.hi} · root on the ${['6th', '5th', '4th'][w.rootString]} string`;
     }
     if (st.shape === 'string') return `${stringName(st.string)} string · the whole neck, one string`;
+    if (st.shape === 'sweep') {
+      const rs = c.shape && c.shape.rootString !== undefined ? c.shape.rootString : st.start;
+      const fr = c.shape && c.shape.length ? `frets ${Math.min(...c.shape.map((n) => n.f))}–${Math.max(...c.shape.map((n) => n.f))}` : '';
+      return `Étude sweep shape · ${rs ? '5th' : '6th'}-string root · ${fr}`;
+    }
     const from = c.shape && c.shape.startString !== undefined ? c.shape.startString : st.start;
     return `Diagonal · two notes per string, from the ${from ? '5th' : '6th'}-string root${from !== st.start ? ' (the other root is too high to climb from)' : ''}`;
   }
@@ -96,6 +126,7 @@
         const w = S.cagedWindows(tuning, st.key, mf)[st.pos];
         shape = S.box(tuning, st.key, c.degs, w.lo, w.hi, mf);
       } else if (st.shape === 'string') shape = S.oneString(tuning, st.key, c.degs, st.string, mf);
+      else if (st.shape === 'sweep') shape = S.sweep(tuning, st.key, c.degs, st.start, mf, 6);
       else shape = S.diagonal(tuning, st.key, c.degs, st.start, mf);
       c.shape = shape;
       chords = [c];
@@ -112,13 +143,24 @@
       const [lo, hi] = st.win.split('-').map(Number);
       let prev = null;
       let dir = 1;
+      let center = (lo + hi) / 2; // where the hand is: sweep shapes stay close to the previous chord
       p.ch.forEach(([d, q, bars], ci) => {
         const rootName = T.spellFrom(keyName, [d])[0];
         const c = chordInfo(T.mod12(st.key + T.DEG_SEMI[d]), q, rootName);
         c.bars = bars;
-        c.shape = S.box(tuning, c.rootPc, c.degs, lo, hi, mf);
         chords.push(c);
-        const r = S.connect(c.shape, prev, dir, bars * 4 * st.npb);
+        const count = bars * 4 * st.npb;
+        if (st.connect === 'sweep') {
+          c.shape = sweepNear(tuning, c, mf, center, prev);
+          // up the shape and back down, like the étude bars, repeated to fill the chord's bars
+          const cycle = c.shape.concat(c.shape.slice(1, -1).reverse());
+          for (let k = 0; k < count && cycle.length; k++) seq.push({ ...cycle[k % cycle.length], chord: ci, first: k === 0 });
+          if (c.shape.length) center = c.shape.reduce((a, n) => a + n.f, 0) / c.shape.length;
+          if (seq.length) prev = seq[seq.length - 1].m;
+          return;
+        }
+        c.shape = S.box(tuning, c.rootPc, c.degs, lo, hi, mf);
+        const r = S.connect(c.shape, prev, dir, count);
         dir = r.dir;
         r.notes.forEach((n, k) => seq.push({ ...n, chord: ci, first: k === 0 }));
         if (r.notes.length) prev = r.notes[r.notes.length - 1].m;
@@ -154,8 +196,9 @@
             <div class="ctl" data-single><label>Shape</label><div id="arShape"></div></div>
             <div class="ctl" data-single data-shape="box"><label>Position (CAGED)</label><div id="arPos"></div></div>
             <div class="ctl" data-single data-shape="string"><label>String</label><div id="arString"></div></div>
-            <div class="ctl" data-single data-shape="diag"><label>Start from</label><div id="arStart"></div></div>
-            <div class="ctl" data-prog><label>Stay in frets</label><div id="arWin"></div></div>
+            <div class="ctl" data-single data-shape="diag sweep"><label>Start from</label><div id="arStart"></div></div>
+            <div class="ctl" data-prog><label>Connect chords</label><div id="arConnect"></div></div>
+            <div class="ctl" data-prog data-connect="area"><label>Stay in frets</label><div id="arWin"></div></div>
           </div>
           <div class="ctl-row">
             <div class="ctl" data-single><label>Pattern</label><div id="arPattern"></div></div>
@@ -215,15 +258,25 @@
       seg('#arType', TYPES.map((t) => ({ v: t.v, label: t.label })), st.type, (v) => set({ type: v }));
       $$('#arType button', el).forEach((b) => (b.title = TYPES.find((t) => t.v === b.dataset.v).hint));
       $('#arProg', el).value = st.prog;
-      $('#arProg', el).addEventListener('change', (e) => set({ prog: e.target.value }));
+      $('#arProg', el).addEventListener('change', (e) => {
+        // presets can bring their own way of connecting chords and rhythm (the étude: sweeps in triplets)
+        const p = PROGS.find((x) => x.id === e.target.value) || {};
+        const patch = { prog: e.target.value };
+        if (p.connect) patch.connect = p.connect;
+        if (p.npb) patch.npb = p.npb;
+        set(patch);
+        if (p.connect) view.connectApi.set(p.connect);
+        if (p.npb) view.npbApi.set(p.npb);
+      });
       this.keyApi = ui.keyChips($('#arKeys', el), st.key, (v) => set({ key: v }));
       seg('#arShape', SHAPES, st.shape, (v) => set({ shape: v }));
       this.posApi = seg('#arPos', [0, 1, 2, 3, 4].map((i) => ({ v: i, label: String(i + 1) })), st.pos, (v) => set({ pos: v }));
       seg('#arString', [0, 1, 2, 3, 4, 5].map((i) => ({ v: i, label: ['E', 'A', 'D', 'G', 'B', 'e'][i] })), st.string, (v) => set({ string: v }));
       seg('#arStart', [{ v: 0, label: '6th-string root' }, { v: 1, label: '5th-string root' }], st.start, (v) => set({ start: v }));
       seg('#arWin', WINDOWS.map((w) => ({ v: w, label: w.replace('-', '–') })), st.win, (v) => set({ win: v }));
+      this.connectApi = seg('#arConnect', [{ v: 'area', label: 'Stay in a fret area' }, { v: 'sweep', label: 'Étude: sweep shapes' }], st.connect, (v) => set({ connect: v }));
       seg('#arPattern', [{ v: 'up', label: 'Up' }, { v: 'down', label: 'Down' }, { v: 'updown', label: 'Up & down' }], st.pattern, (v) => set({ pattern: v }));
-      seg('#arNpb', [{ v: 2, label: '8ths' }, { v: 3, label: 'Triplets' }, { v: 4, label: '16ths' }], st.npb, (v) => set({ npb: v }));
+      this.npbApi = seg('#arNpb', [{ v: 2, label: '8ths' }, { v: 3, label: 'Triplets' }, { v: 4, label: '16ths' }], st.npb, (v) => set({ npb: v }));
       seg('#arPlayMode', PLAY_MODES, st.play, (v) => set({ play: v }));
       seg('#arLabels', [{ v: 'degrees', label: 'Intervals' }, { v: 'notes', label: 'Notes' }, { v: 'fingers', label: 'Fingers' }], st.labels, (v) => {
         st.labels = v;
@@ -284,8 +337,8 @@
   function refresh() {
     const el = root;
     const single = st.mode === 'single';
-    $$('[data-single]', el).forEach((n) => (n.hidden = !single || (n.dataset.shape && n.dataset.shape !== st.shape)));
-    $$('[data-prog]', el).forEach((n) => (n.hidden = single));
+    $$('[data-single]', el).forEach((n) => (n.hidden = !single || (n.dataset.shape && !n.dataset.shape.split(' ').includes(st.shape))));
+    $$('[data-prog]', el).forEach((n) => (n.hidden = single || (n.dataset.connect && n.dataset.connect !== st.connect)));
     $('#arBpmOut', el).textContent = st.bpm + ' bpm';
     $('#arBpm', el).value = st.bpm;
     build();
@@ -306,7 +359,10 @@
     if (!c) return;
     const el = root;
     $('#arChord', el).textContent = c.name;
-    $('#arShapeInfo', el).textContent = st.mode === 'single' ? shapeLabel(c) : `${progDef().name} · frets ${st.win.replace('-', '–')} · chord ${n.chord + 1} of ${chords.length}`;
+    $('#arShapeInfo', el).textContent =
+      st.mode === 'single'
+        ? shapeLabel(c)
+        : `${progDef().name} · ${st.connect === 'sweep' ? `sweep shape, ${c.shape.rootString ? '5th' : '6th'}-string root` : `frets ${st.win.replace('-', '–')}`} · chord ${n.chord + 1} of ${chords.length}`;
     $('#arTones', el).innerHTML = c.degs
       .map((d, k) => `<span class="tone role-${T.roleOf(d)}"><b>${P(c.names[k])}</b><small>${T.prettyDeg(d)}</small></span>`)
       .join('');
@@ -324,7 +380,11 @@
   }
 
   function tip(c) {
+    if (st.mode === 'prog' && st.connect === 'sweep')
+      return 'Like a classical arpeggio étude: each chord is a 7-note sweep shape, up and back down. The hand stays in the same area of the neck by switching between <strong>6th-string-root</strong> and <strong>5th-string-root</strong> shapes. Notice how the minor and major versions keep the same layout.';
     if (st.mode === 'prog') return 'The line never jumps: each new chord starts on its chord tone <strong>closest</strong> to the last note. Notes ringed in white are shared with the next chord: hold them across the change.';
+    if (st.shape === 'sweep')
+      return 'Seven notes over five strings: two notes on a string only when they are a 3rd apart, otherwise the next string. Minor and major triads share the same layout, so you learn one shape for both. Pick it in one smooth motion per string (sweep) or alternate, and slide to the top note.';
     if (st.shape === 'box') {
       const id = S.cagedWindows(GT.tuning(), st.key, maxFret())[st.pos].id;
       return `Position ${st.pos + 1} of 5: the ${id} shape, built around the ${id} chord form you already know. Keep one finger per fret and the hand still; the small circled numbers are the fingers (switch Labels to <strong>Fingers</strong> to see them on the neck).`;
