@@ -1,0 +1,9 @@
+# gitleaks configuration for the deploy-time secret scan (.github/workflows/deploy.yml).
+# Keeps every default rule; the allowlist below only covers known false positives.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Names of browser localStorage keys in the apps (e.g. STORE_KEY = 'deutschweg.v1') are identifiers, not secrets"
+regexTarget = "line"
+regexes = ['''\bSTORE_KEY\s*=\s*['"][a-z0-9._-]{1,40}['"]''']
