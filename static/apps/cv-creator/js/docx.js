@@ -6,8 +6,8 @@
 import {
   TEMPLATES, parseRich, lines, bulletLines, dateRange, contactList,
   isSectionEmpty, accentFor, tint,
-} from './model.js?v=77311bf';
-import { zip } from './zip.js?v=77311bf';
+} from './model.js?v=6bb2890';
+import { zip } from './zip.js?v=6bb2890';
 
 const NS = {
   w: 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',

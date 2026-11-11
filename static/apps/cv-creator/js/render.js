@@ -5,7 +5,7 @@
 import {
   TEMPLATES, parseRich, lines, bulletLines, dateRange, contactList,
   isSectionEmpty, photoFor, accentFor,
-} from './model.js?v=77311bf';
+} from './model.js?v=6bb2890';
 
 export function el(tag, cls, ...kids) {
   const e = document.createElement(tag);

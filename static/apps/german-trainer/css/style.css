@@ -99,13 +99,18 @@ kbd { font-family: ui-monospace, monospace; font-size: .8em; padding: 1px 6px; b
 
 main { padding: calc(var(--top-h) + 24px) 24px 48px calc(var(--nav-w) + 24px); max-width: calc(var(--nav-w) + 1000px); outline: none; }
 body.focus .nav { display: none; }
+.app-footer { padding: 0 24px 32px calc(var(--nav-w) + 24px); max-width: calc(var(--nav-w) + 1000px); color: var(--muted); font-size: .8rem; }
+.app-footer a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.app-footer a:hover { color: var(--primary); }
+body.focus .app-footer { display: none; }
 body.focus main { padding-left: 24px; max-width: 760px; margin: 0 auto; }
 
 @media (max-width: 820px) {
   .nav { top: auto; right: 0; width: auto; height: 64px; flex-direction: row; justify-content: space-around; padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); border-right: 0; border-top: 1px solid var(--border); }
   .nav a { flex-direction: column; gap: 0; padding: 4px 6px; font-size: .68rem; flex: 1; text-align: center; }
   .nav .badge { position: absolute; top: 0; right: 18%; margin: 0; font-size: .65rem; line-height: 16px; min-width: 16px; }
-  main { padding: calc(var(--top-h) + 16px) 16px 96px 16px; }
+  main { padding: calc(var(--top-h) + 16px) 16px 24px 16px; }
+  .app-footer { padding: 0 16px 88px; } /* clears the fixed bottom navigation */
   body.focus main { padding: calc(var(--top-h) + 12px) 16px 140px; }
   .brand span:last-child { display: none; }
   h1 { font-size: 1.35rem; }

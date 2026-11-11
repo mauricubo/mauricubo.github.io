@@ -1,11 +1,11 @@
 import {
   TEMPLATES, SECTION_TYPES, LIMITS, emptyCV, sanitizeCV, newSection, newItem,
   isHexColor, safeFileName,
-} from './model.js?v=77311bf';
-import { SAMPLE } from './sample.js?v=77311bf';
-import { renderCV, el } from './render.js?v=77311bf';
-import { buildDocx } from './docx.js?v=77311bf';
-import { processPhoto, reencodeDataUrl, dataUrlBytes, circlePng, placeholderAvatar } from './photo.js?v=77311bf';
+} from './model.js?v=6bb2890';
+import { SAMPLE } from './sample.js?v=6bb2890';
+import { renderCV, el } from './render.js?v=6bb2890';
+import { buildDocx } from './docx.js?v=6bb2890';
+import { processPhoto, reencodeDataUrl, dataUrlBytes, circlePng, placeholderAvatar } from './photo.js?v=6bb2890';
 
 const STORAGE_KEY = 'cv-creator:data:v1';
 const STORAGE_PREF = 'cv-creator:remember';
