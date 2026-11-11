@@ -1,0 +1,119 @@
+/* CV page styles: used by the live preview and by print (PDF export).
+   Sizes are in pt and mirror the DOCX output in js/docx.js
+   (DOCX half-points / 2 = pt, twips / 20 = pt). */
+
+.cv-page {
+  --accent: #000;
+  --gray: #595959;
+  --ink: #000;
+  --page-w: 210mm;
+  --page-h: 297mm;
+  --pad-y: 45pt;
+  --pad-x: 51pt;
+
+  box-sizing: border-box;
+  width: var(--page-w);
+  min-height: var(--page-h);
+  padding: var(--pad-y) var(--pad-x);
+  background-color: #fff;
+  color: var(--ink);
+  font-family: Arial, "Liberation Sans", Helvetica, sans-serif;
+  font-size: 10pt;
+  line-height: 1.15;
+  text-align: left;
+  overflow-wrap: break-word;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.cv-page.paper-letter { --page-w: 8.5in; --page-h: 11in; }
+.cv-page *, .cv-page *::before { box-sizing: border-box; margin: 0; padding: 0; }
+.cv-page a { color: inherit; text-decoration: none; }
+.cv-page strong { font-weight: 700; }
+
+/* Header */
+.cv-head { display: flex; align-items: center; gap: 6pt; }
+.cv-head-main { flex: 1; min-width: 0; }
+.cv-name { font-size: 24pt; font-weight: 700; line-height: 1.15; margin-bottom: 2pt; }
+.cv-title { font-size: 13pt; color: var(--accent); margin-bottom: 6pt; }
+.cv-contact { font-size: 9.5pt; color: var(--gray); margin-bottom: 1.5pt; }
+.cv-link { color: var(--accent); }
+.cv-sep { color: var(--gray); white-space: pre; }
+.cv-photo { display: block; flex: none; width: 78pt; height: 78pt; object-fit: cover; }
+
+/* Sections */
+.cv-sec-title {
+  font-size: 11pt;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1.5pt;
+  border-bottom: 1pt solid var(--accent);
+  padding-bottom: 3pt;
+  margin: 11pt 0 5pt;
+  break-after: avoid;
+}
+.cv-text { margin-bottom: 2pt; white-space: pre-wrap; }
+.cv-labeled { margin-bottom: 3.5pt; line-height: 1.125; white-space: pre-wrap; }
+.cv-label { color: var(--accent); }
+
+.cv-entry { margin-top: 7.5pt; }
+.cv-entry-head { display: flex; flex-wrap: wrap; align-items: baseline; font-size: 10.5pt; break-after: avoid; }
+.cv-entry-head + .cv-bullets { margin-top: 3pt; }
+.cv-role { font-weight: 700; }
+.cv-org { font-weight: 700; color: var(--accent); }
+.cv-dates { margin-left: auto; padding-left: 6pt; font-size: 9.5pt; color: var(--gray); white-space: nowrap; }
+.cv-loc { font-size: 9pt; font-style: italic; color: var(--gray); margin-bottom: 3pt; break-after: avoid; }
+
+.cv-bullets { list-style: none; }
+.cv-bullets li { position: relative; padding-left: 17pt; margin-bottom: 2.5pt; line-height: 1.1; break-inside: avoid; }
+.cv-bullets li::before { content: "•"; position: absolute; left: 6pt; }
+
+/* ---- Classic ---- */
+.tpl-classic {
+  --gray: #444;
+  font-family: Georgia, "Times New Roman", "Liberation Serif", serif;
+}
+.tpl-classic .cv-head { justify-content: center; text-align: center; }
+.tpl-classic .cv-name { font-size: 22pt; font-weight: 400; }
+.tpl-classic .cv-title { font-size: 12pt; font-style: italic; color: #333; }
+.tpl-classic .cv-sec-title {
+  font-size: 12pt;
+  text-transform: none;
+  font-variant: small-caps;
+  letter-spacing: 1pt;
+  border-bottom-width: 0.75pt;
+}
+.tpl-classic .cv-org { font-weight: 400; font-style: italic; color: inherit; }
+.tpl-classic .cv-label { color: inherit; }
+
+/* ---- ATS Simple ---- */
+.tpl-ats { --gray: #333; }
+.tpl-ats .cv-name { font-size: 20pt; }
+.tpl-ats .cv-title { font-size: 12pt; color: #000; }
+.tpl-ats .cv-sec-title { letter-spacing: 0; border-bottom-width: 0.75pt; }
+.tpl-ats .cv-org { font-weight: 400; }
+.tpl-ats .cv-link { color: #000; }
+
+/* ---- Modern (two columns) ---- */
+.tpl-modern .cv-grid {
+  display: grid;
+  grid-template-columns: 33.45% 1fr;
+  min-height: calc(var(--page-h) - 2 * var(--pad-y) - 2pt);
+}
+.tpl-modern .cv-aside {
+  background-color: color-mix(in srgb, var(--accent) 10%, #fff);
+  padding: 10pt;
+  min-width: 0;
+}
+.tpl-modern .cv-main { padding-left: 12pt; min-width: 0; }
+.tpl-modern .cv-name { font-size: 22pt; }
+.tpl-modern .cv-title { font-size: 12pt; margin-bottom: 3pt; }
+.tpl-modern .cv-photo-wrap { display: flex; justify-content: center; margin-bottom: 4pt; }
+.tpl-modern .cv-photo { width: 86pt; height: 86pt; border-radius: 50%; }
+.tpl-modern .cv-contact-item { font-size: 9pt; margin-bottom: 3pt; color: #333; overflow-wrap: anywhere; }
+.tpl-modern .cv-aside .cv-sec:first-child .cv-sec-title { margin-top: 0; }
+.tpl-modern .cv-aside .cv-label { display: block; margin-bottom: 0.5pt; }
+.tpl-modern .cv-aside .cv-entry-head { display: block; }
+.tpl-modern .cv-aside .cv-entry-head > * { display: block; padding: 0; margin: 0; }
+.tpl-modern .cv-aside .cv-entry-head .cv-sep { display: none; }
+.tpl-modern .cv-aside .cv-dates { font-size: 9pt; }

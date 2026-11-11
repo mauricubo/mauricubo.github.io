@@ -172,8 +172,12 @@ site. Run `hugo server -D` to keep seeing hidden sections locally while you work
 
 The apps are developed in their own repositories
 ([german_teacher](https://github.com/mauricubo/german_teacher),
-[guitar_trainer](https://github.com/mauricubo/guitar_trainer)) and published as part of this
-site at `/apps/german-trainer/` and `/apps/guitar-trainer/`.
+[guitar_trainer](https://github.com/mauricubo/guitar_trainer)) or, until it has one, a local folder
+(`../cv_creator`), and published as part of this site at `/apps/german-trainer/`,
+`/apps/guitar-trainer/` and `/apps/cv-creator/`.
+
+The sync script never copies personal or secret files, even if an app's `.gitignore` misses them:
+`.docx`, `.pdf`, `*_data.json`, `.env` and private key files are always skipped.
 
 **Update an app** after changing it in its own repo:
 

@@ -25,4 +25,10 @@ apps:
     url: "/apps/guitar-trainer/"
     cover: "/images/apps/guitar-trainer.jpg"
     tags: ["Guitar", "Music theory", "Web Audio"]
+  - name: "CV Creator"
+    tagline: "Build a CV, export PDF or Word"
+    description: "Pick one of four formats, write your CV with a live preview, and export a real Word file or a PDF. Everything happens in your browser: nothing is uploaded."
+    url: "/apps/cv-creator/"
+    cover: "/images/apps/cv-creator.jpg"
+    tags: ["Productivity", "PDF & DOCX", "Privacy"]
 ---

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!--
+    GitHub Pages cannot send custom headers, so the policy is set here.
+    No inline scripts/styles, no remote resources, no network calls, and
+    Trusted Types forbids string-to-HTML sinks such as innerHTML.
+  -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'none'; manifest-src 'self'; form-action 'none'; base-uri 'none'; object-src 'none'; require-trusted-types-for 'script'; trusted-types 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="description" content="Create a CV in your browser and export it to PDF or Word. Your data never leaves your device.">
+  <title>CV Creator</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css?v=77311bf">
+  <link rel="stylesheet" href="css/cv.css?v=77311bf">
+  <script type="module" src="js/app.js?v=77311bf"></script>
+</head>
+<body>
+  <noscript><p class="noscript">CV Creator needs JavaScript to run. Nothing is sent to a server: everything happens in your browser.</p></noscript>
+
+  <header class="topbar">
+    <a class="brand" href="./">CV Creator</a>
+    <nav class="topbar-actions" id="editor-actions" hidden aria-label="Editor actions">
+      <button type="button" class="btn ghost" id="btn-templates">Change format</button>
+      <span class="divider" aria-hidden="true"></span>
+      <button type="button" class="btn ghost" id="btn-example">Load example</button>
+      <button type="button" class="btn ghost" id="btn-import">Import</button>
+      <button type="button" class="btn ghost" id="btn-save-json">Save data</button>
+      <button type="button" class="btn ghost danger" id="btn-clear">Clear</button>
+      <span class="divider" aria-hidden="true"></span>
+      <button type="button" class="btn" id="btn-docx">Export DOCX</button>
+      <button type="button" class="btn primary" id="btn-pdf">Export PDF</button>
+    </nav>
+    <input type="file" id="import-file" accept="application/json,.json" hidden>
+  </header>
+
+  <main>
+    <!-- Step 1: choose a format -->
+    <section id="view-chooser" class="view chooser" aria-labelledby="chooser-title">
+      <div class="chooser-intro">
+        <h1 id="chooser-title">Choose a CV format</h1>
+        <p>Pick a layout to start. You can switch at any time without losing what you've written.
+          Everything stays in your browser. Nothing is uploaded.</p>
+        <p id="resume-row" hidden>
+          <button type="button" class="btn primary" id="btn-resume">Continue editing your CV</button>
+        </p>
+      </div>
+      <div class="tpl-grid" id="tpl-grid"></div>
+    </section>
+
+    <!-- Step 2: edit -->
+    <section id="view-editor" class="view editor" hidden aria-label="CV editor">
+      <div class="form-pane" id="form-pane">
+        <div id="form"></div>
+      </div>
+      <div class="preview-pane" id="preview-pane" aria-label="Preview">
+        <div class="preview-meta">
+          <span id="preview-template"></span>
+          <span class="muted">Grey lines show approximate page breaks.</span>
+        </div>
+        <div class="preview-host" id="preview-host"></div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="pdf-dialog" aria-labelledby="pdf-dialog-title">
+    <div class="dialog-body">
+      <h2 id="pdf-dialog-title">Export as PDF</h2>
+      <p>Your browser's print dialog will open. To get a clean PDF:</p>
+      <ol>
+        <li>Set <strong>Destination</strong> to <strong>Save as PDF</strong>.</li>
+        <li>Set <strong>Margins</strong> to <strong>Default</strong> and turn <strong>Headers and footers</strong> off.</li>
+        <li>Turn <strong>Background graphics</strong> on (needed for the Modern sidebar).</li>
+      </ol>
+      <p class="muted">The PDF keeps real, selectable text and working links.</p>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost" id="btn-print-cancel">Cancel</button>
+        <button type="button" class="btn primary" id="btn-print">Open print dialog</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
