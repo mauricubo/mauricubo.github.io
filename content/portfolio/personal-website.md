@@ -2,7 +2,7 @@
 title: "This website"
 description: "A fast, static personal site with a Markdown blog, portfolio and a custom music player."
 date: 2026-10-15
-featured: true
+featured: false
 role: "Design & development"
 stack: ["Hugo", "CSS", "JavaScript", "GitHub Actions"]
 # cover: "/images/portfolio/personal-website.jpg"   # optional 16:9 image

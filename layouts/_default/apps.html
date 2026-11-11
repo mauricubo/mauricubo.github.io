@@ -17,4 +17,7 @@
   </article>
   {{ end }}
 </div>
+{{ with site.Params.support }}
+<p class="support-note">These apps are free and will stay free. If one of them helps you, you can <a href="{{ .url }}" target="_blank" rel="noopener">buy me a coffee ☕</a>. Thank you!</p>
+{{ end }}
 {{ end }}

@@ -246,6 +246,9 @@ h1, h2, h3, h4 {
 .footer-inner p { margin: 0; }
 .footer-inner a:not(.icon-btn) { color: var(--text-muted); }
 .footer-inner a:not(.icon-btn):hover { color: var(--text); }
+.support-note { margin: 4.5rem 0 0; padding-top: 1.5rem; border-top: 1px solid var(--border); color: var(--text-muted); font-size: .9rem; text-align: center; }
+.support-note a { color: var(--text); text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 3px; }
+.support-note a:hover { text-decoration-color: currentColor; }
 
 .socials { display: flex; gap: .1rem; list-style: none; margin: 0; padding: 0; }
 

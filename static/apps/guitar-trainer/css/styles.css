@@ -275,6 +275,9 @@ main { max-width: 1280px; margin: 0 auto; padding: 28px 24px 40px; }
 .cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .cols-3 p { color: var(--muted); font-size: 0.92rem; margin: 0; }
 .footer { text-align: center; color: var(--faint); font-size: 0.8rem; padding: 10px 24px 30px; }
+.footer p { margin: 4px 0; }
+.footer a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.footer a:hover { color: var(--accent); }
 
 /* ---------- buttons ---------- */
 .btn {

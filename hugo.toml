@@ -13,6 +13,12 @@ enableRobotsTXT = true
   # Optional: show an email link in the footer and About page.
   # email = "you@example.com"
 
+  # Optional support link: a small "Buy me a coffee" in the footer and on the Apps page.
+  # It is a plain link (no script, no tracking). Delete these lines to remove it everywhere.
+  [params.support]
+    url = "https://buymeacoffee.com/mauricubo"
+    label = "Buy me a coffee"
+
   # Social links shown in the hero, footer and About page.
   # `icon` must match an icon defined in layouts/partials/icon.html.
   [[params.social]]
