@@ -18,6 +18,13 @@
     GT.$('#goal-ring').style.strokeDashoffset = 94.25 * (1 - Math.min(1, today / goal));
     GT.$('#goal-text').textContent = today >= goal ? '✓' : today;
     GT.$('#chip-goal').title = 'Tagesziel: ' + today + ' / ' + goal + ' XP';
+    if (S().onboarded && GT.quests) {
+      const q = GT.quests.ensure(), d = q.daily.filter((x) => x.done).length;
+      const qc = GT.$('#chip-quest');
+      qc.hidden = false;
+      qc.textContent = (q.chest ? '🧰 ' : '🎯 ') + d + '/' + q.daily.length;
+      qc.title = 'Kopfgelder heute: ' + q.daily.map((x) => (x.done ? '✓ ' : '· ') + GT.quests.label(x)).join(' | ');
+    }
     const due = GT.srs.due().length;
     const b = GT.$('#badge-review');
     b.hidden = !due; b.textContent = due > 99 ? '99+' : due;
@@ -35,13 +42,14 @@
     GT.$('#checkbar') && GT.$('#checkbar').remove();
     const parts = hash.replace(/^#\/?/, '').split('/');
     if (!S().onboarded && parts[0] !== 'placement') return V.onboard();
-    GT.$$('.nav a').forEach((a) => a.classList.toggle('active', a.dataset.nav === parts[0] || (parts[0] === 'unit' && a.dataset.nav === 'path') || (parts[0] === 'drill' && a.dataset.nav === 'practice')));
+    GT.$$('.nav a').forEach((a) => a.classList.toggle('active', a.dataset.nav === parts[0] || (parts[0] === 'unit' && a.dataset.nav === 'path') || (parts[0] === 'drill' && a.dataset.nav === 'practice') || (parts[0] === 'quests' && a.dataset.nav === 'quick')));
     view().innerHTML = '';
     window.scrollTo(0, 0);
     const fn = {
       path: V.path, unit: () => (parts[2] ? V.activity(parts[1], parts[2]) : V.unit(parts[1])), exam: () => V.exam(parts[1]),
       review: V.review, practice: V.practice, drill: () => V.drill(parts[1]), library: () => V.library(parts[1] || 'grammar'),
-      stats: V.stats, settings: V.settings, placement: V.placement,
+      stats: GT.xviews.stats, settings: V.settings, placement: V.placement,
+      quick: () => GT.xviews.quick(parts[1]), quests: GT.xviews.quests,
     }[parts[0]] || V.path;
     fn();
     GT.updateTopbar();
@@ -150,13 +158,15 @@
         due >= 5 ? h('button.btn.lg', { onclick: () => go('#/review') }, 'Wiederholen') : null,
         h('button.btn.lg', { onclick: () => go('#/unit/' + u.id + (act ? '/' + act : '')), style: due >= 5 ? { background: 'rgba(255,255,255,.2)', color: '#fff' } : null }, due >= 5 ? 'Lektion' : 'Los geht’s →')));
     v.appendChild(hero);
+    v.appendChild(GT.ui.quickStrip());
 
     // Today plan
     const today = GT.todayXP(), goal = S().profile.goal;
-    v.appendChild(h('div.grid.grid-3', { style: { marginTop: '16px' } },
+    v.appendChild(h('div.grid.grid-4', { style: { marginTop: '16px' } },
       h('div.card', h('small', 'Tagesziel'), h('h2', { style: { margin: '4px 0 8px' } }, today + ' / ' + goal + ' XP'), h('div.progress' + (today >= goal ? '.ok' : ''), h('span', { style: { width: Math.min(100, (today / goal) * 100) + '%' } }))),
-      h('div.card', { style: { cursor: 'pointer' }, onclick: () => go('#/review') }, h('small', 'Wiederholungen'), h('h2', { style: { margin: '4px 0 0' } }, due ? due + ' fällig' : 'Alles erledigt ✓'), h('small', 'Spaced Repetition')),
-      h('div.card', h('small', 'Serie'), h('h2', { style: { margin: '4px 0 0' } }, '🔥 ' + GT.streakAlive() + ' Tage'), h('small', 'Rekord: ' + S().streak.best))));
+      GT.ui.questCard(),
+      h('div.card', { style: { cursor: 'pointer' }, onclick: () => go('#/review') }, h('small', 'Wiederholungen'), h('h2', { style: { margin: '4px 0 0' } }, due ? due + ' fällig' : 'Alles erledigt ✓'), h('small', 'FSRS-Gedächtnismodell')),
+      h('div.card', h('small', 'Serie'), h('h2', { style: { margin: '4px 0 0' } }, '🔥 ' + GT.streakAlive() + ' Tage'), h('small', 'Rekord: ' + S().streak.best + (S().freezes ? ' · 🧊 ' + S().freezes : '')))));
 
     // Levels
     GT.levels.forEach((lvl) => {
@@ -229,7 +239,7 @@
 
   function markDone(u, key, xp) {
     const st = GT.unitState(u.id);
-    if (!st[key]) { st[key] = true; if (xp) GT.addXP(xp); }
+    if (!st[key]) { st[key] = true; if (xp) GT.addXP(xp); GT.track('activity', { unit: u.id, key }); }
     GT.save();
   }
   const unitVocab = (u) => u.vocab.map((_, i) => GT.vocabById['v:' + u.id + ':' + i]);
@@ -254,6 +264,11 @@
     const v = view();
     v.appendChild(h('a.back', { href: '#/unit/' + u.id }, '← ' + u.title));
     v.appendChild(h('h1', '📖 ' + u.grammar.title));
+    if (!GT.unitState(u.id).learn && !GT.unitState(u.id).pretest) {
+      v.appendChild(h('div.card.pretest',
+        h('div', h('b', '🔮 Erst raten, dann lernen'), h('p.muted', { style: { margin: '4px 0 0' } }, '3 Fragen zum neuen Thema, bevor du die Erklärung liest. Falsch raten ist ausdrücklich erlaubt: Vorab-Tests machen die Erklärung danach nachweislich wirksamer.')),
+        h('button.btn.primary', { onclick: () => startPretest(u) }, 'Vorab-Quiz')));
+    }
     v.appendChild(h('div.card', GT.renderGrammar(u.grammar)));
     v.appendChild(h('div.section-title', h('h2', '🗂️ Wortschatz'), h('button.btn.small.ghost', { onclick: () => playAll(unitVocab(u).map((x) => x.de)) }, '▶ Alle anhören')));
     v.appendChild(h('div.vocab-list', unitVocab(u).map(GT.vocabRow)));
@@ -261,6 +276,16 @@
     v.appendChild(h('div.row', { style: { marginTop: '20px', justifyContent: 'flex-end' } },
       h('button.btn.primary.lg', { onclick: () => { markDone(u, 'learn', 5); go('#/unit/' + u.id + '/practice'); } }, 'Verstanden – jetzt üben →')));
   };
+  /** Pretesting effect: attempt questions before studying the explanation */
+  function startPretest(u) {
+    const items = sample(u.exercises.map((_, i) => i).filter((i) => u.exercises[i].t === 'mc' || u.exercises[i].t === 'gap'), 3)
+      .map((i) => { const it = GT.items.fromExercise(u, i); delete it.ref; it.skill = 'pretest'; return it; });
+    if (!items.length) return;
+    GT.Session.start({
+      title: 'Vorab-Quiz', items, requeue: false, exitTo: '#/unit/' + u.id + '/learn',
+      onFinish() { GT.unitState(u.id).pretest = true; GT.save(); return { title: 'Jetzt kommt die Erklärung', text: 'Achte beim Lesen besonders auf die Stellen, bei denen du unsicher warst. Genau dort lernst du jetzt am meisten.' }; },
+    });
+  }
   function playAll(list) {
     let i = 0;
     const next = () => { if (i < list.length) GT.speech.say(list[i++], { onend: () => setTimeout(next, 350) }); };
@@ -326,7 +351,7 @@
         const pass = r.acc >= GT.PASS;
         if (pass) {
           S().unlocked[u.id] = true;
-          if (prev < GT.PASS) GT.addXP(25);
+          if (prev < GT.PASS) { GT.addXP(25); GT.track('lesson', { unit: u.id }); }
           unitVocab(u).forEach((w) => GT.srs.ensure(w.id, 2));
         }
         GT.save();
@@ -372,6 +397,7 @@
                 if (GT.LEVELS.indexOf(S().startLevel) < ni) GT.setStartLevel(nl);
               }
               GT.addXP(50);
+              GT.track('exam', { level: lvlId });
             }
             GT.save();
             return pass ? { title: '🏅 ' + lvlId + ' bestanden: ' + r.acc + ' %', text: 'Ausgezeichnet! Das nächste Niveau ist freigeschaltet.' } : { title: r.acc + ' %', text: 'Für das Bestehen brauchst du ' + GT.PASS + ' %. Arbeite die Lektionen durch und versuch es erneut.' };
@@ -484,7 +510,7 @@
     const due = GT.srs.due();
     const cards = Object.keys(S().cards).filter(GT.srs.valid);
     v.appendChild(h('h1', '🔁 Wiederholen'));
-    v.appendChild(h('p.muted', 'Spaced Repetition: Jede richtige Antwort verlängert den Abstand bis zur nächsten Wiederholung (1 → 6 → 15 → 40 Tage …). Fehler kommen schnell wieder.'));
+    v.appendChild(h('p.muted', 'Spaced Repetition mit FSRS: Für jede Karte wird berechnet, wann du sie mit ' + Math.round((S().settings.retention || 0.9) * 100) + ' % Wahrscheinlichkeit gerade noch weißt – genau dann kommt sie wieder. Schnelle, sichere Antworten verlängern den Abstand stärker. Fehler kommen schnell wieder.'));
     if (!cards.length) {
       v.appendChild(h('div.card.empty', h('div.big', '🌱'), h('h2', 'Noch keine Karten'), h('p.muted', 'Schließe die Übung einer Lektion ab – dann landen die Wörter hier.'), h('button.btn.primary', { onclick: () => go('#/path') }, 'Zum Lernpfad')));
       return;
@@ -613,44 +639,6 @@
     body.appendChild(h('div.card.prose', { html: GT.ref.method }));
   }
 
-  /* ---------------- Stats ---------------- */
-  V.stats = function () {
-    const v = view();
-    const s = S();
-    const vocabCards = Object.keys(s.cards).filter((id) => id.startsWith('v:') && GT.vocabById[id]);
-    const known = vocabCards.filter((id) => GT.srs.status(id) === 'known').length;
-    const passed = GT.units.filter(GT.unitPassed).length;
-    const tot = Object.values(s.skills).reduce((a, b) => [a[0] + b.ok, a[1] + b.n], [0, 0]);
-    const mins = Math.round(Object.values(s.minutes).reduce((a, b) => a + b, 0) / 60);
-    v.appendChild(h('h1', '📈 Fortschritt'));
-    v.appendChild(h('div.kpis',
-      h('div.kpi', h('b', s.xp), h('span', 'XP gesamt')),
-      h('div.kpi', h('b', '🔥 ' + GT.streakAlive()), h('span', 'Serie · Rekord ' + s.streak.best)),
-      h('div.kpi', h('b', vocabCards.length), h('span', 'Wörter gelernt')),
-      h('div.kpi', h('b', known), h('span', 'Wörter gefestigt')),
-      h('div.kpi', h('b', passed + '/' + GT.units.length), h('span', 'Lektionen bestanden')),
-      h('div.kpi', h('b', (tot[1] ? Math.round((tot[0] / tot[1]) * 100) : 0) + ' %'), h('span', 'Genauigkeit')),
-      h('div.kpi', h('b', mins), h('span', 'Minuten in Übungen'))));
-    // last 14 days
-    const days = Array.from({ length: 14 }, (_, i) => GT.dateKey(Date.now() - (13 - i) * GT.DAY));
-    const vals = days.map((d) => s.xpLog[d] || 0);
-    const max = Math.max(s.profile.goal, ...vals);
-    v.appendChild(h('div.card', { style: { marginTop: '16px' } }, h('h3', 'XP der letzten 14 Tage'),
-      h('div.bars', vals.map((x, i) => h('div.bar', h('small', x || ''), h('i' + (x >= s.profile.goal ? '.met' : ''), { style: { height: (x / max) * 100 + '%' } }), h('small', days[i].slice(8)))))));
-    // skills
-    const names = { vocab: 'Wortschatz', grammar: 'Grammatik', gender: 'Artikel', listening: 'Hören', speaking: 'Sprechen', reading: 'Lesen', adjective: 'Adjektive', verbs: 'Verben', prepositions: 'Präpositionen', wordorder: 'Satzbau' };
-    const sk = Object.keys(names).filter((k) => s.skills[k]);
-    v.appendChild(h('div.card', h('h3', 'Fertigkeiten (Genauigkeit)'),
-      sk.length ? sk.map((k) => { const p = Math.round((s.skills[k].ok / s.skills[k].n) * 100); return h('div.skill-row', h('span', names[k]), h('div.progress' + (p >= 80 ? '.ok' : ''), h('span', { style: { width: p + '%' } })), h('b', p + '%')); })
-        : h('p.muted', 'Noch keine Daten – starte eine Übung!'),
-      sk.length ? h('p.muted', { style: { marginTop: '10px' } }, 'Unter 70 %? Nutze das passende Training unter „Training“.') : null));
-    // levels
-    v.appendChild(h('div.card', h('h3', 'Niveaus'), GT.levels.map((l) => {
-      const p = l.units.filter(GT.unitPassed).length / l.units.length * 100;
-      return h('div.skill-row', h('span', h('span.pill.lvl.lvl-' + l.id, l.id), S().exams[l.id] >= GT.PASS ? ' 🏅' : ''), h('div.progress.ok', h('span', { style: { width: p + '%' } })), h('b', Math.round(p) + '%'));
-    })));
-  };
-
   /* ---------------- Settings ---------------- */
   V.settings = function () {
     const v = view(), s = S();
@@ -666,6 +654,12 @@
       toggle('Englische Übersetzungen anzeigen', 'english'),
       toggle('Soundeffekte', 'sound'),
       toggle('Lösungssatz automatisch vorlesen', 'autoplay')));
+    v.appendChild(h('div.card',
+      h('h3', '🧠 Gedächtnismodell (FSRS)'),
+      h('label.field', h('span', 'Ziel-Behaltensrate'), h('select', { onchange: (e) => { s.settings.retention = +e.target.value; save(); } },
+        [[0.8, '80 % – wenig Wiederholungen, mehr Vergessen'], [0.85, '85 % – entspannt'], [0.9, '90 % – empfohlen'], [0.95, '95 % – Prüfungsvorbereitung (deutlich mehr Wiederholungen)']]
+          .map(([k, n]) => h('option', { value: k, selected: k === (s.settings.retention || 0.9) }, n)))),
+      h('p.muted', { style: { margin: 0 } }, 'Gilt ab der nächsten Wiederholung jeder Karte. Höhere Ziele bedeuten kürzere Abstände.')));
     v.appendChild(h('div.card',
       h('h3', '🔊 Sprachausgabe'),
       voices.length ? h('label.field', h('span', 'Stimme'), h('select', { onchange: (e) => { s.settings.voice = e.target.value; save(); GT.speech.say('Hallo! So klinge ich.'); } },
@@ -712,7 +706,9 @@
   /* ---------------- Boot ---------------- */
   GT.applyTheme();
   GT.speech.init();
+  GT.pruneLogs();
   GT.route();
+  if (S().onboarded) GT.badges.check();
   // periodic refresh of the badge (cards become due during the day)
   setInterval(() => !GT.Session.active() && GT.updateTopbar(), 60000);
 })();

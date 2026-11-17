@@ -11,7 +11,8 @@
     intro: 'Neues Wort', mc: 'Wähle die richtige Antwort', gap: 'Ergänze die Lücke', order: 'Bilde den Satz',
     tr: 'Übersetze ins Deutsche', fix: 'Korrigiere den Fehler', vmc: 'Was bedeutet das?', vmcr: 'Wie sagt man auf Deutsch?',
     vtype: 'Schreib das deutsche Wort', gender: 'der, die oder das?', match: 'Finde die Paare', listen: 'Hör zu und schreib mit',
-    speak: 'Sprich nach (Shadowing)', vlisten: 'Hör zu: welches Wort?',
+    speak: 'Sprich nach (Shadowing)', vlisten: 'Hör zu: welches Wort?', vcloze: 'Wort im Kontext',
+    produce: 'Bilde einen eigenen Satz',
   };
   const PRAISE = ['Richtig!', 'Super!', 'Genau!', 'Sehr gut!', 'Klasse!', 'Perfekt!', 'Prima!', 'Ausgezeichnet!'];
 
@@ -36,9 +37,18 @@
     const pool = GT.allVocab.filter((x) => x.unit.level === v.unit.level);
     if (c.r === 0) return F.vmc(v, pool);
     if (c.r === 1) return pick([F.vmcr(v, pool), F.vtype(v)]);
+    // mature words: retrieve them inside a real sentence (context beats isolated words)
+    if (c.r >= 2 && Math.random() < 0.35) { const cz = F.vcloze(v); if (cz) return cz; }
     if (c.r >= 3 && GT.speech.available() && Math.random() < 0.3) return F.vlisten(v, pool);
     return F.vtype(v);
   };
+  /** Gap-fill the word inside its own example sentence */
+  F.vcloze = function (v) {
+    const z = GT.smart && GT.smart.cloze(v);
+    return z ? { kind: 'vcloze', v, q: z.q, a: z.a, srs: v.id, skill: 'vocab' } : null;
+  };
+  /** Generation effect: write your own sentence with the word */
+  F.produce = (v) => ({ kind: 'produce', v, skill: 'writing' });
 
   /* ---------------- Session engine ---------------- */
   const S = (GT.Session = {});
@@ -52,18 +62,33 @@
       mode: opts.mode || 'practice', onFinish: opts.onFinish, exitTo: opts.exitTo || '#/path',
       idx: 0, graded: 0, right: 0, xp: 0, combo: 0, bestCombo: 0, mistakes: [], log: [], t0: Date.now(),
       total: opts.items.filter((i) => i.kind !== 'intro').length,
+      tag: opts.tag || '', quick: !!opts.quick, autoNext: !!opts.autoNext,
+      deadline: opts.timeLimit ? Date.now() + opts.timeLimit * 1000 : 0, timeLimit: opts.timeLimit || 0,
     };
     document.body.classList.add('focus');
+    if (cur.deadline) {
+      cur.timer = setInterval(() => {
+        if (!cur || !cur.deadline) return;
+        const left = Math.max(0, cur.deadline - Date.now());
+        const el = GT.$('#sess-timer');
+        if (el) { el.textContent = '⏱ ' + Math.ceil(left / 1000); el.classList.toggle('low', left < 10000); }
+        if (!left && !GT.$('#feedback')) S.finish();
+      }, 200);
+    }
     S.render();
   };
   S.active = () => !!cur;
+  S._cur = () => cur; // for tests and debugging
   S.abort = function () {
     if (!cur) return;
     GT.addTime((Date.now() - cur.t0) / 1000);
     GT.save();
+    if (cur.timer) clearInterval(cur.timer);
+    clearTimeout(cur.autoT);
     cur = null;
     document.body.classList.remove('focus');
     GT.$('#feedback') && GT.$('#feedback').remove();
+    GT.$('#checkbar') && GT.$('#checkbar').remove();
   };
 
   S.render = function () {
@@ -71,13 +96,16 @@
     view.innerHTML = '';
     GT.$('#feedback') && GT.$('#feedback').remove();
     GT.$('#checkbar') && GT.$('#checkbar').remove();
-    if (cur.idx >= cur.items.length) return S.finish();
+    if (cur.idx >= cur.items.length || (cur.deadline && Date.now() >= cur.deadline)) return S.finish();
     const item = cur.items[cur.idx];
-    const pct = cur.total ? Math.min(100, (cur.graded / cur.total) * 100) : 0;
+    cur.shownAt = Date.now();
+    const pct = cur.deadline ? Math.min(100, (1 - (cur.deadline - Date.now()) / (cur.timeLimit * 1000)) * 100)
+      : cur.total ? Math.min(100, (cur.graded / cur.total) * 100) : 0;
     view.appendChild(h('div.session-top',
       h('button.x', { title: 'Beenden (Esc)', onclick: () => S.confirmExit() }, '✕'),
-      h('div.progress', h('span', { style: { width: pct + '%' } })),
-      h('span.combo', cur.combo >= 3 ? '🔥 ' + cur.combo : '')));
+      h('div.progress' + (cur.deadline ? '.timed' : ''), h('span', { style: { width: pct + '%' } })),
+      cur.deadline ? h('span.timer#sess-timer', '⏱ ' + Math.ceil((cur.deadline - Date.now()) / 1000)) : null,
+      cur.deadline ? h('span.combo', '✓ ' + cur.right) : h('span.combo', cur.combo >= 3 ? '🔥 ' + cur.combo : '')));
     const area = h('div.ex');
     view.appendChild(area);
     if (item.retry) area.appendChild(h('div.ex-kind', { style: { color: 'var(--warn)' } }, '↻ Noch einmal'));
@@ -107,16 +135,23 @@
     ctx.answered = true;
     GT.$('#checkbar') && GT.$('#checkbar').remove();
     GT.$$('.choice, .tile, input, textarea', ctx.area).forEach((e) => (e.disabled = true));
-    if (res === 'info') { cur.idx++; return S.render(); }
+    if (res === 'info') {
+      if (item.kind === 'intro') GT.track('newword', { id: item.v.id });
+      cur.idx++; return S.render();
+    }
 
     const first = !item.retry;
     const ok = res !== 'wrong';
+    const ms = Date.now() - (cur.shownAt || Date.now());
     if (first) {
       cur.graded++;
       if (ok) cur.right++;
       GT.logSkill(item.skill || 'grammar', ok);
-      cur.log.push({ item, ok, res });
-      if (item.srs) GT.srs.grade(item.srs, res === 'right' ? 2 : res === 'typo' ? 1 : 0);
+      cur.log.push({ item, ok, res, ms });
+      const prev = item.srs && GT.state.cards[item.srs];
+      const review = !!(prev && prev.s > 0);
+      if (item.srs) GT.srs.grade(item.srs, S.grade(item, res, ms, prev));
+      GT.track('answer', { ok, res, kind: item.kind, skill: item.skill || 'grammar', review, ms, tag: cur.tag });
       if (!ok && item.ref && !item.srs) { // into the mistake bank
         if (GT.state.cards[item.ref]) GT.srs.grade(item.ref, 0); else GT.srs.ensure(item.ref, 1);
       }
@@ -124,6 +159,7 @@
     }
     if (ok) {
       cur.combo++; cur.bestCombo = Math.max(cur.bestCombo, cur.combo);
+      if (cur.combo >= 3) GT.track('combo', { n: cur.combo });
       const gain = first ? (res === 'right' ? 10 : 7) + (cur.combo >= 5 ? 2 : 0) : 3;
       cur.xp += gain; GT.addXP(gain);
       GT.sfx.ok();
@@ -135,8 +171,26 @@
         cur.items.splice(pos, 0, Object.assign({}, item, { retry: true }));
       }
     }
-    if (info.say && GT.state.settings.autoplay !== false) setTimeout(() => GT.speech.say(info.say), 150);
+    if (info.say && GT.state.settings.autoplay !== false && !cur.autoNext) setTimeout(() => GT.speech.say(info.say), 150);
     S.showFeedback(res, info, item);
+    // sprint mode: correct answers flow straight on
+    if (cur.autoNext && res === 'right') { const c = cur; c.autoT = setTimeout(() => { if (cur === c && GT.$('#feedback')) S.next(); }, 450); }
+  };
+
+  /**
+   * Turn a result into an FSRS grade. Response time is a strong signal of
+   * memory strength: an instant correct answer is "easy" (longer interval),
+   * a correct answer after a long struggle is "hard".
+   */
+  S.grade = function (item, res, ms, prev) {
+    if (res === 'wrong') return 0;
+    if (res === 'typo') return 1;
+    if (!prev || !prev.s) return 2;
+    const typed = /^(vtype|vcloze|gap|tr|fix|listen)$/.test(item.kind);
+    const fast = typed ? 3500 + 220 * String(item.v ? item.v.de : [].concat(item.a || '')[0] || '').length : 3000;
+    if (ms < fast) return 3;
+    if (ms > 30000) return 1;
+    return 2;
   };
 
   S.showFeedback = function (res, info, item) {
@@ -146,6 +200,20 @@
     if (info.solution && res !== 'right') msg.appendChild(h('div.sol', { html: info.solution }));
     if (info.why) msg.appendChild(h('div.why', { html: '💡 ' + info.why }));
     if (info.say) msg.appendChild(h('div', { style: { marginTop: '6px' } }, GT.speakBtn(info.say)));
+    // Leeches: let the learner create their own memory hook (elaboration)
+    const cid = item.srs || (item.v && item.v.id);
+    if (res !== 'right' && cid && GT.state.cards[cid]) {
+      const note = GT.state.notes[cid];
+      if (note) msg.appendChild(h('div.why', '🧠 Deine Eselsbrücke: ' + note));
+      if (GT.state.cards[cid].l >= 2 || note) {
+        msg.appendChild(h('button.override', { onclick: (e) => {
+          const t = prompt('Deine Eselsbrücke (Bild, Reim, ähnliches Wort …) – selbst ausgedacht merkt man sich am besten:', note || '');
+          if (t == null) return;
+          if (t.trim()) GT.state.notes[cid] = t.trim().slice(0, 200); else delete GT.state.notes[cid];
+          GT.save(); e.currentTarget.textContent = '✓ Eselsbrücke gespeichert';
+        } }, note ? '✏️ Eselsbrücke ändern' : '🧠 Eselsbrücke notieren'));
+      }
+    }
     if (res === 'wrong' && info.overridable) {
       msg.appendChild(h('button.override', {
         onclick: () => {
@@ -167,7 +235,7 @@
     requestAnimationFrame(() => fb.classList.add('show'));
   };
 
-  S.next = function () { if (!cur) return; cur.idx++; S.render(); };
+  S.next = function () { if (!cur) return; clearTimeout(cur.autoT); cur.idx++; S.render(); };
 
   S.confirmExit = function () {
     if (cur.graded < 2 || confirm('Übung beenden? Dein bisheriger Fortschritt (XP, Wiederholungen) bleibt gespeichert.')) {
@@ -183,7 +251,8 @@
     if (bonus) GT.addXP(bonus);
     S.abort();
     GT.sfx.done();
-    const result = { acc, right: c.right, total: c.graded, xp: c.xp + bonus, secs, mistakes: c.mistakes, bestCombo: c.bestCombo, log: c.log };
+    const result = { acc, right: c.right, total: c.graded, xp: c.xp + bonus, secs, mistakes: c.mistakes, bestCombo: c.bestCombo, log: c.log, tag: c.tag };
+    GT.track('session', { acc, graded: c.graded, right: c.right, secs, tag: c.tag, quick: c.quick, bestCombo: c.bestCombo });
     const extra = c.onFinish ? c.onFinish(result) : null;
     GT.save();
     const view = GT.$('#view');
@@ -196,7 +265,7 @@
       h('div.result-stats',
         h('div', h('b', acc + ' %'), h('small', 'Genauigkeit')),
         h('div', h('b', '+' + result.xp), h('small', 'XP')),
-        h('div', h('b', Math.max(1, Math.round(secs / 60)) + ' min'), h('small', 'Zeit')),
+        c.tag === 'sprint' ? h('div', h('b', c.right), h('small', 'richtig in ' + c.timeLimit + ' s')) : h('div', h('b', Math.max(1, Math.round(secs / 60)) + ' min'), h('small', 'Zeit')),
         c.bestCombo >= 3 ? h('div', h('b', '🔥 ' + c.bestCombo), h('small', 'Beste Serie')) : null),
       c.mistakes.length ? h('details.acc', { style: { textAlign: 'left', marginTop: '10px' } },
         h('summary', '📝 Deine Fehler (' + c.mistakes.length + ') – landen in der Wiederholung'),
@@ -496,6 +565,42 @@
       h('button.btn.ghost', { onclick: () => ctx.done('typo', { noteTitle: 'Übersprungen', note: 'Shadowing später nochmal probieren.' }) }, 'Jetzt nicht sprechen'),
       h('button.btn.primary', { onclick: () => mic.click() }, '🎤 Aufnehmen')));
     document.body.appendChild(bar);
+  };
+
+  R.vcloze = function (item, ctx) {
+    const v = item.v;
+    ctx.area.appendChild(h('div.ex-q', { html: esc(item.q).replace(/_{2,}/, '<span class="gap">&nbsp;</span>') }));
+    ctx.area.appendChild(h('p.ex-sub', '💡 ' + v.en + ' · ' + item.a.length + ' Buchstaben, beginnt mit „' + item.a.charAt(0) + '“'));
+    const inp = textInput(ctx, 'Fehlendes Wort…');
+    ctx.setCheck(() => {
+      const r = GT.check(inp.value, item.a, { noTypos: item.a.length < 6 });
+      inp.classList.add(r.res === 'wrong' ? 'wrong' : 'right');
+      const full = item.q.replace(/_{2,}/, item.a);
+      ctx.done(r.res, { solution: esc(item.q).replace(/_{2,}/, '<b>' + esc(item.a) + '</b>') + '<br><small>' + GT.deHtml(v.de) + ' = ' + esc(v.en) + '</small>', note: r.note, say: full });
+    });
+  };
+
+  R.produce = function (item, ctx) {
+    const v = item.v;
+    ctx.area.appendChild(h('div.row', { style: { justifyContent: 'center' } }, h('div.big-word', { html: GT.deHtml(v.de) }), GT.speakBtn(v.de)));
+    ctx.area.appendChild(h('p.ex-sub', { style: { textAlign: 'center' } }, v.en + ' – schreib einen Satz über DICH (mind. 4 Wörter). Persönliche Sätze bleiben viel besser hängen.'));
+    const inp = textInput(ctx, 'Mein Satz…');
+    const lemma = GT.stripArticle(v.de).replace(/\s*\(.*?\)/g, '').replace(/^sich\s+/, '').split(/[\s\/,]+/)[0];
+    const stem = GT.fold(lemma).slice(0, Math.max(3, lemma.length - 3));
+    ctx.setCheck(() => {
+      const t = inp.value.trim();
+      const words = (t.match(/[\p{L}]+/gu) || []);
+      const uses = words.some((w) => GT.fold(w).includes(stem));
+      const okLen = words.length >= 4;
+      const res = uses && okLen ? 'right' : t ? 'typo' : 'wrong';
+      ctx.done(res, {
+        noteTitle: !uses ? 'Benutze das Wort im Satz' : 'Etwas länger, bitte',
+        note: res === 'right' ? '„' + t + '“' : (!uses ? 'Dein Satz enthält „' + lemma + '“ nicht.' : 'Mindestens 4 Wörter.'),
+        solution: v.ex ? 'Beispiel: <b>' + esc(v.ex) + '</b>' : '<b>' + GT.deHtml(v.de) + '</b>',
+        why: res === 'right' && v.ex ? 'Vergleiche mit: ' + esc(v.ex) : 'Tipp: Lies deinen Satz laut vor.',
+        say: res === 'right' ? t : v.ex || v.de,
+      });
+    });
   };
 
   /* ---------------- Gender hints (rules of thumb) ---------------- */

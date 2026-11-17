@@ -65,7 +65,7 @@ GT.defaultState = () => ({
   created: Date.now(),
   onboarded: false,
   profile: { name: '', goal: 50 },
-  settings: { rate: 0.95, theme: 'auto', voice: '', english: true, sound: true },
+  settings: { rate: 0.95, theme: 'auto', voice: '', english: true, sound: true, retention: 0.9 },
   xp: 0,
   xpLog: {},          // dateKey -> xp that day
   streak: { count: 0, last: null, best: 0 },
@@ -76,6 +76,13 @@ GT.defaultState = () => ({
   skills: {},         // skill -> {n, ok}
   minutes: {},        // dateKey -> seconds of activity
   startLevel: 'A2',
+  daily: {},          // dateKey -> {n, ok, rv, rvok, nw, sk:{skill:[n, ok]}}
+  hours: [],          // hour of day -> [answers, correct]
+  quests: null,       // bounties (see boost.js)
+  badges: {},         // badgeId -> dateKey earned
+  counters: {},       // sessions, perfect, bounties, chests, sprintBest …
+  notes: {},          // cardId -> learner's own mnemonic (Eselsbrücke)
+  freezes: 0,         // streak freezes in stock
 });
 
 GT.load = function () {
@@ -97,27 +104,84 @@ GT.save = function () {
 GT.state = GT.load();
 
 /* ---------------- XP, streak, skills ---------------- */
-GT.addXP = function (n) {
+/** 'YYYY-MM-DD' → local midnight timestamp */
+GT.keyTime = (k) => { const p = String(k).split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).getTime(); };
+/** Whole days missed between the last active day and today (0 = streak continues today, -1 = active today) */
+GT.missedDays = () => {
+  const last = GT.state.streak.last;
+  if (!last) return Infinity;
+  return Math.round((GT.startOfDay() - GT.keyTime(last)) / GT.DAY) - 1;
+};
+
+/* ---------------- Event bus (bounties, badges and statistics listen) ---------------- */
+GT._listeners = [];
+GT.on = (fn) => GT._listeners.push(fn);
+GT.track = function (ev, data) {
+  for (const fn of GT._listeners) { try { fn(ev, data || {}); } catch (e) { console.warn('track', ev, e); } }
+};
+
+GT.addXP = function (n, opts) {
   const s = GT.state, k = GT.dateKey();
   s.xp += n;
   s.xpLog[k] = (s.xpLog[k] || 0) + n;
-  const yesterday = GT.dateKey(Date.now() - GT.DAY);
+  let newDay = false;
   if (s.streak.last !== k) {
-    s.streak.count = s.streak.last === yesterday ? s.streak.count + 1 : 1;
+    const missed = GT.missedDays();
+    if (missed === 0) s.streak.count++;
+    else if (missed > 0 && missed <= (s.freezes || 0)) {
+      // streak freezes protect missed days
+      s.freezes -= missed; s.streak.count++;
+      setTimeout(() => GT.toast('🧊 Serienschutz eingesetzt – deine Serie lebt!', 3200), 400);
+    } else s.streak.count = 1;
     s.streak.last = k;
     s.streak.best = Math.max(s.streak.best, s.streak.count);
+    newDay = true;
   }
   GT.save();
+  if (newDay) GT.track('day', {});
+  if (!(opts && opts.quiet)) GT.track('xp', { n });
   GT.updateTopbar && GT.updateTopbar();
 };
 GT.streakAlive = () => {
-  const s = GT.state.streak;
-  return s.last === GT.dateKey() || s.last === GT.dateKey(Date.now() - GT.DAY) ? s.count : 0;
+  const m = GT.missedDays();
+  return m <= 0 || m <= (GT.state.freezes || 0) ? GT.state.streak.count : 0;
 };
 GT.todayXP = () => GT.state.xpLog[GT.dateKey()] || 0;
 GT.logSkill = function (skill, ok) {
   const sk = GT.state.skills[skill] || (GT.state.skills[skill] = { n: 0, ok: 0 });
   sk.n++; if (ok) sk.ok++;
+};
+/** Per-day learning log used by the dashboard */
+GT.today = function () {
+  const k = GT.dateKey(), d = GT.state.daily;
+  return d[k] || (d[k] = { n: 0, ok: 0, rv: 0, rvok: 0, nw: 0, sk: {} });
+};
+GT.on(function (ev, d) {
+  const s = GT.state;
+  if (ev === 'answer') {
+    const t = GT.today();
+    t.n++; if (d.ok) t.ok++;
+    if (d.review) { t.rv++; if (d.ok) t.rvok++; }
+    const sk = t.sk[d.skill] || (t.sk[d.skill] = [0, 0]);
+    sk[0]++; if (d.ok) sk[1]++;
+    const hr = new Date().getHours();
+    const hs = s.hours[hr] || (s.hours[hr] = [0, 0]);
+    hs[0]++; if (d.ok) hs[1]++;
+  } else if (ev === 'newword') GT.today().nw++;
+  else if (ev === 'session') {
+    const c = s.counters;
+    c.sessions = (c.sessions || 0) + 1;
+    if (d.graded >= 5 && d.acc === 100) c.perfect = (c.perfect || 0) + 1;
+    if (d.tag === 'sprint') c.sprintBest = Math.max(c.sprintBest || 0, d.right);
+    const hr = new Date().getHours();
+    if (hr < 7) c.early = 1;
+    if (hr >= 23) c.night = 1;
+  }
+});
+/** Drop per-day logs older than ~13 months */
+GT.pruneLogs = function () {
+  const cut = GT.dateKey(Date.now() - 400 * GT.DAY);
+  for (const k in GT.state.daily) if (k < cut) delete GT.state.daily[k];
 };
 GT.addTime = function (sec) {
   const k = GT.dateKey();
@@ -182,41 +246,92 @@ GT.units.forEach((u) => (u.vocab || []).forEach((v, i) => GT.allVocab.push({ id:
 GT.vocabById = {};
 GT.allVocab.forEach((v) => (GT.vocabById[v.id] = v));
 
-/* ---------------- Spaced repetition (SM-2 variant) ----------------
-   Card: {e: ease, i: interval days, d: due timestamp, r: successful reps, l: lapses, s: seen count}
+/* ---------------- Spaced repetition: FSRS ----------------
+   FSRS (Free Spaced Repetition Scheduler, the algorithm behind modern Anki)
+   models every memory with two numbers:
+     S = stability   – days until recall probability drops to 90 %
+     D = difficulty  – 1 (easy) … 10 (hard), how much S grows per review
+   Recall probability after t days: R = (1 + F·t/S)^-0.5. Each card is shown
+   again when R falls to the learner's target retention (default 90 %).
+   Card: {S, D, last: last review ts, d: due ts, i: interval days,
+          r: successful reps in a row, l: lapses, s: times seen}
    Grade: 0 = again, 1 = hard, 2 = good, 3 = easy */
+GT.FSRS = (function () {
+  const w = [0.40255, 1.18385, 3.173, 15.69105, 7.1949, 0.5345, 1.4604, 0.0046, 1.54575, 0.1192, 1.01925,
+    1.9395, 0.11, 0.29605, 2.2698, 0.2315, 2.9898, 0.51655, 0.6621];
+  const DECAY = -0.5, F = 19 / 81, cl = GT.clamp;
+  const R = (t, S) => Math.pow(1 + F * Math.max(0, t) / S, DECAY);
+  const interval = (S, r) => (S / F) * (Math.pow(r, 1 / DECAY) - 1);
+  const D0 = (G) => cl(w[4] - Math.exp(w[5] * (G - 1)) + 1, 1, 10);
+  const nextD = (D, G) => { const d1 = D - w[6] * (G - 3) * (10 - D) / 9; return cl(w[7] * D0(4) + (1 - w[7]) * d1, 1, 10); };
+  const recall = (D, S, r, G) => S * (Math.exp(w[8]) * (11 - D) * Math.pow(S, -w[9]) * (Math.exp(w[10] * (1 - r)) - 1) * (G === 2 ? w[15] : 1) * (G === 4 ? w[16] : 1) + 1);
+  const forget = (D, S, r) => Math.min(S, w[11] * Math.pow(D, -w[12]) * (Math.pow(S + 1, w[13]) - 1) * Math.exp(w[14] * (1 - r)));
+  const shortTerm = (S, G) => S * Math.exp(w[17] * (G - 3 + w[18]));
+  return { w, R, interval, D0, nextD, recall, forget, shortTerm };
+})();
+
 GT.srs = {
   get(id) { return GT.state.cards[id]; },
   ensure(id, firstDueDays) {
-    if (!GT.state.cards[id]) GT.state.cards[id] = { e: 2.5, i: 0, d: GT.startOfDay() + (firstDueDays || 1) * GT.DAY, r: 0, l: 0, s: 0 };
+    if (!GT.state.cards[id]) GT.state.cards[id] = { i: 0, d: GT.startOfDay() + (firstDueDays || 1) * GT.DAY, r: 0, l: 0, s: 0 };
     return GT.state.cards[id];
   },
+  /** Convert an old SM-2 card ({e, i}) into FSRS memory state */
+  migrate(c) {
+    if (c.S != null || !(c.i > 0)) return c;
+    c.S = Math.max(0.5, c.i);
+    c.D = GT.clamp(5 + (2.5 - (c.e || 2.5)) * 4 + (c.l || 0) * 0.5, 1, 10);
+    c.last = Math.min(Date.now(), c.d - c.i * GT.DAY);
+    delete c.e;
+    return c;
+  },
+  /** Probability (0..1) that the learner still remembers the card now (or at `at`) */
+  R(id, at) {
+    const c = typeof id === 'string' ? GT.state.cards[id] : id;
+    if (!c) return null;
+    GT.srs.migrate(c);
+    if (c.S == null || !c.last) return null;
+    return GT.FSRS.R(((at || Date.now()) - c.last) / GT.DAY, c.S);
+  },
   grade(id, g) {
-    const c = GT.srs.ensure(id, 0);
+    const c = GT.srs.migrate(GT.srs.ensure(id, 0));
+    const X = GT.FSRS, G = g + 1, now = Date.now();
     c.s++;
-    if (g === 0) {
-      c.l++; c.r = 0; c.e = Math.max(1.3, c.e - 0.2); c.i = 0;
-      c.d = Date.now() + 10 * 60 * 1000; // relearn in 10 min (same day)
+    if (c.S == null || !c.last) { c.S = X.w[G - 1]; c.D = X.D0(G); }
+    else {
+      const t = (now - c.last) / GT.DAY;
+      const r = X.R(t, c.S);
+      if (t < 0.5) c.S = X.shortTerm(c.S, G);           // same-day re-study
+      else c.S = G === 1 ? X.forget(c.D, c.S, r) : X.recall(c.D, c.S, r, G);
+      c.D = X.nextD(c.D, G);
+    }
+    c.S = GT.clamp(c.S, 0.1, 36500);
+    c.last = now;
+    if (G === 1) {
+      c.l++; c.r = 0; c.i = 0;
+      c.d = now + 10 * 60 * 1000; // relearn in 10 min (same day)
     } else {
-      if (c.r === 0) c.i = g === 3 ? 3 : 1;
-      else if (c.r === 1) c.i = g === 1 ? 3 : g === 3 ? 8 : 6;
-      else c.i = Math.round(c.i * (g === 1 ? 1.2 : g === 3 ? c.e * 1.3 : c.e));
-      c.i = Math.min(c.i, 365);
-      c.e = Math.max(1.3, c.e + (g === 1 ? -0.15 : g === 3 ? 0.15 : 0));
       c.r++;
-      // small fuzz spreads reviews out and avoids "review avalanches"
-      const fuzz = c.i > 4 ? Math.round((Math.random() - 0.5) * c.i * 0.1) : 0;
-      c.d = GT.startOfDay() + (c.i + fuzz) * GT.DAY;
+      const want = GT.state.settings.retention || 0.9;
+      let days = X.interval(c.S, want);
+      // fuzz spreads reviews out and avoids "review avalanches"
+      if (days > 4) days *= 1 + (Math.random() - 0.5) * 0.1;
+      c.i = GT.clamp(Math.round(days), 1, 3650);
+      c.d = GT.startOfDay() + c.i * GT.DAY;
     }
     return c;
   },
   due(limit) {
     const now = Date.now();
     const ids = Object.keys(GT.state.cards).filter((id) => GT.state.cards[id].d <= now && GT.srs.valid(id));
-    // most overdue + weakest first
-    ids.sort((a, b) => (GT.state.cards[a].d - GT.state.cards[b].d) || (GT.state.cards[a].e - GT.state.cards[b].e));
+    // the most "forgotten" first (lowest recall probability), then the oldest
+    const rr = {};
+    ids.forEach((id) => { const r = GT.srs.R(id); rr[id] = r == null ? 0 : r; });
+    ids.sort((a, b) => (rr[a] - rr[b]) || (GT.state.cards[a].d - GT.state.cards[b].d));
     return limit ? ids.slice(0, limit) : ids;
   },
+  /** Words that keep slipping away ("leeches") */
+  leech(id) { const c = GT.state.cards[id]; return !!c && (c.l >= 3 || (c.D >= 9 && c.l >= 2)); },
   valid(id) {
     if (id.startsWith('v:')) return !!GT.vocabById[id];
     if (id.startsWith('x:')) return !!GT.mistakeItem(id);
@@ -225,7 +340,8 @@ GT.srs = {
   status(id) {
     const c = GT.state.cards[id];
     if (!c || !c.s) return 'new';
-    return c.i >= 21 ? 'known' : 'learning';
+    GT.srs.migrate(c);
+    return (c.S || c.i) >= 21 ? 'known' : 'learning';
   },
   nextDue() {
     let m = Infinity;
