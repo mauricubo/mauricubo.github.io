@@ -1,6 +1,6 @@
 /* DeutschWeg service worker: offline support, network first.
    Online you always get the latest version; the cache is only a fallback. */
-const CACHE = 'deutschweg-v1';
+const CACHE = 'deutschweg-v2';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => {

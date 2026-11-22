@@ -50,6 +50,7 @@
       review: V.review, practice: V.practice, drill: () => V.drill(parts[1]), library: () => V.library(parts[1] || 'grammar'),
       stats: GT.xviews.stats, settings: V.settings, placement: V.placement,
       quick: () => GT.xviews.quick(parts[1]), quests: GT.xviews.quests,
+      words: () => GT.xviews.words(parts[1], parts[2], parts[3]),
     }[parts[0]] || V.path;
     fn();
     GT.updateTopbar();

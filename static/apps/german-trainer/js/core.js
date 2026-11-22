@@ -83,6 +83,7 @@ GT.defaultState = () => ({
   counters: {},       // sessions, perfect, bounties, chests, sprintBest …
   notes: {},          // cardId -> learner's own mnemonic (Eselsbrücke)
   freezes: 0,         // streak freezes in stock
+  freq: {},           // frequency list: word -> [box 0–5, seen, right, last ts] (see words.js)
 });
 
 GT.load = function () {
